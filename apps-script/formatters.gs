@@ -5,8 +5,22 @@
 
 class OutputFormatters {
   constructor() {
-    this.config = CONFIG;
-    this.sheetConfig = this.config.outputFormatting.googleSheets;
+    // Lazy load config to avoid initialization order issues
+    this.config = null;
+    this.sheetConfig = null;
+  }
+
+  getConfig() {
+    if (!this.config) {
+      this.config = CONFIG;
+      this.sheetConfig = this.config.outputFormatting.googleSheets;
+    }
+    return this.config;
+  }
+
+  getSheetConfig() {
+    this.getConfig(); // Ensure config is loaded
+    return this.sheetConfig;
   }
 
   /**
@@ -64,7 +78,7 @@ class OutputFormatters {
   setupSheetHeaders(sheet) {
     const headers = [
       'PDF File', // Column A
-      ...this.sheetConfig.headers, // Columns B-T
+      ...this.getSheetConfig().headers, // Columns B-T
       'Processing Date', 'Overall Confidence', 'Review Required', 'Validation Errors'
     ];
     
@@ -88,7 +102,7 @@ class OutputFormatters {
     const row = [pdfFileName]; // PDF file name first
     
     // Add field values in column order
-    const fieldNames = this.config.getFieldNames();
+    const fieldNames = this.getConfig().getFieldNames();
     for (const fieldName of fieldNames) {
       const field = validatedFields[fieldName];
       const value = field?.value || '';
@@ -115,7 +129,7 @@ class OutputFormatters {
    */
   countReviewRequired(validatedFields) {
     let count = 0;
-    const fieldNames = this.config.getFieldNames();
+    const fieldNames = this.getConfig().getFieldNames();
     
     for (const fieldName of fieldNames) {
       const field = validatedFields[fieldName];
@@ -132,7 +146,7 @@ class OutputFormatters {
    */
   collectValidationErrors(validatedFields) {
     const errors = [];
-    const fieldNames = this.config.getFieldNames();
+    const fieldNames = this.getConfig().getFieldNames();
     
     for (const fieldName of fieldNames) {
       const field = validatedFields[fieldName];
@@ -149,8 +163,8 @@ class OutputFormatters {
    * Apply conditional formatting based on confidence levels
    */
   applyConditionalFormatting(sheet, rowNumber, validatedFields) {
-    const fieldNames = this.config.getFieldNames();
-    const colors = this.sheetConfig.confidenceColors;
+    const fieldNames = this.getConfig().getFieldNames();
+    const colors = this.getSheetConfig().confidenceColors;
     
     for (let i = 0; i < fieldNames.length; i++) {
       const fieldName = fieldNames[i];
@@ -237,7 +251,7 @@ class OutputFormatters {
    */
   applyColumnSpecificFormatting(sheet, rowNumber) {
     // Processing date column (format as date)
-    const dateColumnIndex = this.config.getFieldNames().length + 2; // +1 for filename, +1 for date
+    const dateColumnIndex = this.getConfig().getFieldNames().length + 2; // +1 for filename, +1 for date
     const dateRange = sheet.getRange(rowNumber, dateColumnIndex);
     dateRange.setNumberFormat('MM/dd/yyyy HH:mm');
     
@@ -256,7 +270,7 @@ class OutputFormatters {
    * Set optimal column widths
    */
   setOptimalColumnWidths(sheet) {
-    const fieldNames = this.config.getFieldNames();
+    const fieldNames = this.getConfig().getFieldNames();
     
     // PDF filename column
     sheet.setColumnWidth(1, 150);
@@ -439,7 +453,7 @@ class OutputFormatters {
     csvData.push(headers.join(','));
     
     // Data rows
-    const fieldNames = this.config.getFieldNames();
+    const fieldNames = this.getConfig().getFieldNames();
     for (const fieldName of fieldNames) {
       const field = validatedFields[fieldName];
       const row = [
@@ -502,7 +516,7 @@ class OutputFormatters {
     lines.push('FIELD EXTRACTION RESULTS');
     lines.push('-'.repeat(30));
     
-    const fieldNames = this.config.getFieldNames();
+    const fieldNames = this.getConfig().getFieldNames();
     for (const fieldName of fieldNames) {
       const field = validatedFields[fieldName];
       const status = field?.isValid ? '✓' : '✗';
