@@ -184,18 +184,42 @@ class FieldExtractors {
       
       // Search for field aliases in text
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = lines[i].trim();
         
-        // Check if line contains field aliases
+        // Check if line contains field aliases or starts with field name
+        let foundAlias = false;
         for (const alias of fieldConfig.aliases) {
-          if (line.toLowerCase().includes(alias.toLowerCase())) {
-            // Look for values in current line and nearby lines
+          if (line.toLowerCase().includes(alias.toLowerCase()) || 
+              line.toLowerCase().startsWith(alias.toLowerCase())) {
+            foundAlias = true;
+            break;
+          }
+        }
+        
+        if (foundAlias) {
+          // Look for values in current line first
+          const currentLineValues = this.extractProximityValues(line, fieldConfig);
+          for (const value of currentLineValues) {
+            candidates.push({
+              raw: value,
+              normalized: value,
+              confidence: 50, // Higher confidence for same-line values
+              context: line.substring(0, 100),
+              method: 'proximity_recovery',
+              matchIndex: i
+            });
+          }
+          
+          // If no values in current line, look in nearby lines
+          if (currentLineValues.length === 0) {
+            const lineGap = proximitySettings.lineGap || 2; // Increased line gap
             const searchLines = [];
-            const lineGap = proximitySettings.lineGap || 1;
             
             // Add current line and nearby lines
             for (let j = Math.max(0, i - lineGap); j <= Math.min(lines.length - 1, i + lineGap); j++) {
-              searchLines.push(lines[j]);
+              if (j !== i) { // Skip current line since we already checked it
+                searchLines.push(lines[j].trim());
+              }
             }
             
             const searchText = searchLines.join(' ');
@@ -205,8 +229,8 @@ class FieldExtractors {
               candidates.push({
                 raw: value,
                 normalized: value,
-                confidence: 40, // Base confidence for proximity extraction
-                context: searchText.substring(0, 100),
+                confidence: 35, // Lower confidence for nearby lines
+                context: (line + ' ' + searchText).substring(0, 100),
                 method: 'proximity_recovery',
                 matchIndex: i
               });
@@ -223,7 +247,7 @@ class FieldExtractors {
       const normalized = this.normalizeValue(bestCandidate, fieldConfig);
       return {
         value: normalized.value,
-        confidence: Math.max(15, normalized.confidence - 20), // Penalty for proximity extraction
+        confidence: Math.max(15, normalized.confidence - 15), // Reduced penalty for proximity extraction
         context: bestCandidate.context,
         method: 'proximity_recovery',
         rawValue: bestCandidate.raw
@@ -892,21 +916,33 @@ class FieldExtractors {
     
     switch (fieldName) {
       case 'dimensions':
-        // More permissive dimension patterns
+        // More permissive dimension patterns - handle spec table format
+        relaxedPatterns.push(/(\d+)\s*mm\s*x\s*(\d+)\s*mm\s*x\s*(\d+)\s*mm/gi);
         relaxedPatterns.push(/(\d+)\s*\w*\s*[x×*·\s]+\s*(\d+)\s*\w*\s*[x×*·\s]+\s*(\d+)/gi);
         relaxedPatterns.push(/(\d+)\s+(\d+)\s+(\d+)/gi); // Just three numbers
+        // Handle parenthetical dimensions: "274 mm x 185 mm x 17 mm (10.8" x 7.3" x 0.67")"
+        relaxedPatterns.push(/(\d+)\s*mm\s*x\s*(\d+)\s*mm\s*x\s*(\d+)\s*mm\s*\([^)]*\)/gi);
         break;
         
       case 'weight':
-        // Look for any number followed by weight units
+        // Look for weight in spec format "980 g (2.2 lbs)"
+        relaxedPatterns.push(/(\d+)\s*g\s*\([^)]*\)/gi);
         relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*(?:g|kg|grams?|kilograms?|lb|pound|oz)/gi);
         relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*g/gi);
         break;
         
       case 'operating_temperature':
-        // Temperature ranges or single values
+        // Temperature ranges in environmental specs: "-20°C to 60°C (-4°F to 140°F)"
+        relaxedPatterns.push(/([-+]?\d+)\s*°C\s*to\s*([-+]?\d+)\s*°C\s*\([^)]*\)/gi);
+        relaxedPatterns.push(/([-+]?\d+)\s*°C\s*to\s*([-+]?\d+)\s*°C/gi);
         relaxedPatterns.push(/([-+]?\d+)\s*(?:°C|C|degrees?)/gi);
         relaxedPatterns.push(/([-+]?\d+)\s*(?:to|[-–~])\s*([-+]?\d+)/gi);
+        break;
+        
+      case 'storage_temperature':
+        // Storage temperature patterns
+        relaxedPatterns.push(/([-+]?\d+)\s*°C\s*to\s*([-+]?\d+)\s*°C\s*\([^)]*\)/gi);
+        relaxedPatterns.push(/([-+]?\d+)\s*°C\s*to\s*([-+]?\d+)\s*°C/gi);
         break;
         
       case 'input_voltage':
@@ -916,8 +952,9 @@ class FieldExtractors {
         break;
         
       case 'power_consumption':
-        // Power patterns
+        // Power patterns - also look in battery specs
         relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*(?:W|watts?|mA|mW)/gi);
+        relaxedPatterns.push(/(\d+)\s*mAh/gi); // Battery capacity
         break;
         
       case 'product_description':
@@ -946,17 +983,35 @@ class FieldExtractors {
     
     // Bonus if found near field aliases
     const context = this.extractContext(text, match.index, 80);
+    const contextLower = context.toLowerCase();
+    
     for (const alias of fieldConfig.aliases) {
-      if (context.toLowerCase().includes(alias.toLowerCase())) {
-        confidence += 15;
+      if (contextLower.includes(alias.toLowerCase())) {
+        confidence += 20; // Increased bonus for alias proximity
         break;
       }
+    }
+    
+    // Bonus for specification table context indicators
+    if (contextLower.includes('specification') || contextLower.includes('dimensions') ||
+        contextLower.includes('weight') || contextLower.includes('operating') ||
+        contextLower.includes('storage') || contextLower.includes('environment')) {
+      confidence += 15;
     }
     
     // Bonus for reasonable match length
     if (match[0].length >= 3) confidence += 5;
     
-    return Math.min(60, confidence); // Cap at 60 for relaxed patterns
+    // Bonus for proper units in context
+    if (fieldConfig.unit === 'mm' && contextLower.includes('mm')) confidence += 10;
+    if (fieldConfig.unit === 'g' && contextLower.includes('g')) confidence += 10;
+    if (fieldConfig.unit === '°C' && contextLower.includes('°c')) confidence += 10;
+    
+    // Penalty for very short or very long matches
+    if (match[0].length < 2) confidence -= 15;
+    if (match[0].length > 50) confidence -= 10;
+    
+    return Math.min(75, Math.max(10, confidence)); // Cap between 10-75 for relaxed patterns
   }
 
   /**
@@ -989,34 +1044,64 @@ class FieldExtractors {
     let currentSection = 'general';
     let sectionContent = [];
     
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
       const lowerLine = line.toLowerCase();
       
-      // Identify section headers
-      if (lowerLine.includes('performance') || lowerLine.includes('specification')) {
+      // Identify specification tables (key indicators)
+      if (line.match(/^\s*(Dimensions|Weight|Operating|Storage|Input|Power|Processor|RAM|Display|Battery|Communication|Environment)\s*$/i) ||
+          line.match(/^\s*(Dimensions|Weight|Operating|Storage|Input|Power)\s+/i)) {
         if (sectionContent.length > 0) {
           sections[currentSection] = sectionContent.join('\n');
         }
         currentSection = 'performance';
-        sectionContent = [];
-      } else if (lowerLine.includes('technical') || lowerLine.includes('hardware')) {
+        sectionContent = [line];
+        continue;
+      }
+      
+      // Environmental/operating conditions section
+      if (lowerLine.includes('environment') || lowerLine.includes('operating') || 
+          lowerLine.includes('storage') || lowerLine.includes('temperature')) {
+        if (sectionContent.length > 0) {
+          sections[currentSection] = sectionContent.join('\n');
+        }
+        currentSection = 'performance';
+        sectionContent = [line];
+        continue;
+      }
+      
+      // Technical specifications section
+      if (lowerLine.includes('specification') || lowerLine.includes('technical') || 
+          lowerLine.includes('hardware') || lowerLine.includes('positioning') ||
+          line.match(/^\s*[A-Z\s]{3,}\s*$/)) { // All caps headers
         if (sectionContent.length > 0) {
           sections[currentSection] = sectionContent.join('\n');
         }
         currentSection = 'technical';
-        sectionContent = [];
-      } else if (lowerLine.includes('feature') || lowerLine.includes('capability')) {
+        sectionContent = [line];
+        continue;
+      }
+      
+      // Features section
+      if (lowerLine.includes('feature') || lowerLine.includes('capability') ||
+          lowerLine.includes('performance') || lowerLine.includes('computing')) {
         if (sectionContent.length > 0) {
           sections[currentSection] = sectionContent.join('\n');
         }
         currentSection = 'features';
-        sectionContent = [];
-      } else if (lowerLine.includes('overview') || lowerLine.includes('description')) {
-        if (sectionContent.length > 0) {
+        sectionContent = [line];
+        continue;
+      }
+      
+      // Marketing/overview section (usually at the beginning)
+      if (i < lines.length / 4 && (lowerLine.includes('overview') || lowerLine.includes('description') ||
+          line.length > 80 && !line.match(/\d+\s*(mm|g|Hz|VDC|°C)/))) {
+        if (sectionContent.length > 0 && currentSection !== 'marketing') {
           sections[currentSection] = sectionContent.join('\n');
         }
         currentSection = 'marketing';
-        sectionContent = [];
+        sectionContent = [line];
+        continue;
       }
       
       sectionContent.push(line);
