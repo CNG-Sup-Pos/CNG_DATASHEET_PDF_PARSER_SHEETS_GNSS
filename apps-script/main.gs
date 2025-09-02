@@ -14,6 +14,9 @@ const LOG_SHEET_NAME = 'Processing Log';
  * Main entry point - called when script is triggered
  */
 function onOpen() {
+  // Initialize modules first
+  initializeModules();
+  
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('GNSS PDF Parser')
     .addItem('Process Single PDF', 'showPDFSelector')
@@ -24,6 +27,41 @@ function onOpen() {
     .addSeparator()
     .addItem('Setup Instructions', 'showSetupInstructions')
     .addToUi();
+}
+
+/**
+ * Initialize all modules in proper order
+ * Call this function first before using any parser functionality
+ */
+function initializeModules() {
+  try {
+    console.log('Initializing modules...');
+    
+    // Force CONFIG initialization
+    if (typeof CONFIG !== 'undefined' && CONFIG.getFieldNames) {
+      console.log('CONFIG module available');
+    } else {
+      console.warn('CONFIG module not properly loaded');
+    }
+    
+    // Force VALIDATORS reinitialization
+    if (typeof VALIDATORS !== 'undefined') {
+      if (VALIDATORS.reinitialize) {
+        VALIDATORS.reinitialize();
+        console.log('VALIDATORS reinitialized');
+      } else {
+        console.warn('VALIDATORS missing reinitialize method');
+      }
+    } else {
+      console.warn('VALIDATORS module not loaded');
+    }
+    
+    console.log('Module initialization complete');
+    return true;
+  } catch (error) {
+    console.error('Module initialization failed:', error);
+    return false;
+  }
 }
 
 /**
@@ -539,16 +577,38 @@ function logProcessingEvent(level, message, fileName = '') {
  */
 function initializeParser() {
   try {
-    // Test configuration loading
+    // Initialize modules in proper order with error handling
+    console.log('Starting parser initialization...');
+    
+    // 1. Initialize CONFIG
+    if (typeof CONFIG === 'undefined' || CONFIG === null) {
+      throw new Error('CONFIG module not loaded');
+    }
+    
+    // 2. Test configuration loading
     const fieldNames = CONFIG.getFieldNames();
     console.log(`Configuration loaded: ${fieldNames.length} fields configured`);
     
-    // Test extractors
+    // 3. Reinitialize VALIDATORS with proper CONFIG
+    if (typeof VALIDATORS !== 'undefined' && VALIDATORS.reinitialize) {
+      VALIDATORS.reinitialize();
+      console.log('VALIDATORS reinitialized with CONFIG');
+    }
+    
+    // 4. Test extractors
+    if (typeof EXTRACTORS === 'undefined' || EXTRACTORS === null) {
+      throw new Error('EXTRACTORS module not loaded');
+    }
+    
     const testText = "Dimensions: 235 × 146 × 14.5 mm\nWeight: 850 g\nAccuracy: 0.6 cm + 0.5 ppm";
     const extracted = EXTRACTORS.extractField('dimensions', testText);
     console.log('Test extraction result:', extracted);
     
-    // Test validators
+    // 5. Test validators
+    if (typeof VALIDATORS === 'undefined' || VALIDATORS === null) {
+      throw new Error('VALIDATORS module not loaded');
+    }
+    
     const validated = VALIDATORS.validateField('dimensions', extracted);
     console.log('Test validation result:', validated);
     

@@ -5,8 +5,92 @@
 
 class FieldValidators {
   constructor() {
-    this.config = CONFIG;
-    this.rules = this.config.validationRules;
+    // Initialize with proper error handling and fallback
+    this.initializeConfig();
+  }
+
+  /**
+   * Initialize configuration with error handling
+   */
+  initializeConfig() {
+    try {
+      // Try to get CONFIG from config.gs, create default if not available
+      this.config = (typeof CONFIG !== 'undefined' && CONFIG !== null) ? CONFIG : this.getDefaultConfig();
+      this.rules = this.config.validationRules || this.getDefaultValidationRules();
+    } catch (error) {
+      console.warn('Could not load CONFIG from config.gs, using defaults:', error);
+      this.config = this.getDefaultConfig();
+      this.rules = this.getDefaultValidationRules();
+    }
+  }
+
+  /**
+   * Reinitialize with proper CONFIG if it becomes available
+   */
+  reinitialize() {
+    this.initializeConfig();
+  }
+
+  /**
+   * Get default configuration if CONFIG is not available
+   */
+  getDefaultConfig() {
+    return {
+      validationRules: this.getDefaultValidationRules()
+    };
+  }
+
+  /**
+   * Get default validation rules if config is not loaded
+   */
+  getDefaultValidationRules() {
+    return {
+      global: {
+        requiredConfidenceMinimum: 50,
+        autoRejectBelow: 30,
+        manualReviewThreshold: 70,
+        highConfidenceThreshold: 85,
+        maximumFieldLength: 500
+      },
+      
+      fieldRules: {
+        dimensions: {
+          required: true,
+          formatPattern: /^\d+(?:\.\d+)?\s*[×x]\s*\d+(?:\.\d+)?\s*[×x]\s*\d+(?:\.\d+)?\s*mm$/,
+          valueRanges: {
+            lengthMm: {min: 10, max: 500},
+            widthMm: {min: 10, max: 500},
+            heightMm: {min: 5, max: 200}
+          }
+        },
+        
+        weight: {
+          required: true,
+          formatPattern: /^\d+(?:\.\d+)?\s*g$/,
+          valueRanges: {
+            weightG: {min: 5, max: 5000}
+          }
+        },
+        
+        operating_temperature: {
+          required: true,
+          formatPattern: /^-?\d+(?:\.\d+)?\s*to\s*\+?\d+(?:\.\d+)?°C$/,
+          valueRanges: {
+            minTempC: {min: -60, max: 10},
+            maxTempC: {min: 40, max: 100}
+          }
+        },
+        
+        accuracy: {
+          required: true,
+          formatPattern: /^\d+(?:\.\d+)?\s*cm(?:\s*\+\s*\d+(?:\.\d+)?\s*ppm)?$/,
+          valueRanges: {
+            horizontalAccuracyCm: {min: 0.1, max: 500},
+            verticalAccuracyCm: {min: 0.1, max: 1000}
+          }
+        }
+      }
+    };
   }
 
   /**
@@ -547,5 +631,16 @@ class FieldValidators {
   }
 }
 
-// Export for use in other modules
-var VALIDATORS = new FieldValidators();
+// Export for use in other modules with error handling
+try {
+  var VALIDATORS = new FieldValidators();
+} catch (error) {
+  console.error('Error initializing VALIDATORS:', error);
+  // Create a minimal fallback validator
+  var VALIDATORS = {
+    validateAllFields: function(fields) {
+      console.warn('Using fallback validator due to initialization error');
+      return { overallConfidence: 50, validFieldCount: 0, totalFields: 0 };
+    }
+  };
+}
