@@ -191,7 +191,7 @@ function processSinglePDF(fileId) {
     logProcessingEvent('INFO', `Extracted ${pdfText.length} characters from PDF`, fileName);
     
     // Extract fields
-    const extractedFields = EXTRACTORS.extractAllFields(pdfText);
+    const extractedFields = getExtractors().extractAllFields(pdfText);
     logProcessingEvent('INFO', `Extracted ${Object.keys(extractedFields).length} fields`, fileName);
     
     // Validate fields
@@ -199,7 +199,7 @@ function processSinglePDF(fileId) {
     logProcessingEvent('INFO', `Validated fields, overall confidence: ${validatedFields.overallConfidence}%`, fileName);
     
     // Write to Google Sheets
-    const writeResult = FORMATTERS.writeToGoogleSheets(
+    const writeResult = getFormatters().writeToGoogleSheets(
       validatedFields, 
       fileName, 
       SPREADSHEET_ID, 
@@ -532,7 +532,7 @@ function validateExistingData() {
       }
       
       // Update formatting based on new validation
-      FORMATTERS.applyConditionalFormatting(sheet, i + 1, validatedFields);
+      getFormatters().applyConditionalFormatting(sheet, i + 1, validatedFields);
     }
     
     const message = `Validation completed!\n\nValid rows: ${validRowCount}\nInvalid rows: ${invalidRowCount}`;
@@ -706,12 +706,12 @@ function initializeParser() {
     }
     
     // 4. Test extractors
-    if (typeof EXTRACTORS === 'undefined' || EXTRACTORS === null) {
+    if (typeof getExtractors === 'undefined') {
       throw new Error('EXTRACTORS module not loaded');
     }
     
     const testText = "Dimensions: 235 × 146 × 14.5 mm\nWeight: 850 g\nAccuracy: 0.6 cm + 0.5 ppm";
-    const extracted = EXTRACTORS.extractField('dimensions', testText);
+    const extracted = getExtractors().extractField('dimensions', testText);
     console.log('Test extraction result:', extracted);
     
     // 5. Test validators
@@ -783,7 +783,7 @@ function testParser() {
     console.log('Starting test extraction...');
     
     // Extract all fields
-    const extracted = EXTRACTORS.extractAllFields(testText);
+    const extracted = getExtractors().extractAllFields(testText);
     console.log('Extracted fields:', extracted);
     
     // Validate fields
@@ -795,7 +795,7 @@ function testParser() {
     console.log('Validation summary:', summary);
     
     // Generate report
-    const report = FORMATTERS.generateTextReport(validated, 'TEST_FILE.pdf', summary);
+    const report = getFormatters().generateTextReport(validated, 'TEST_FILE.pdf', summary);
     console.log('Generated report:\n', report);
     
     logProcessingEvent('INFO', `Test completed: ${validated.overallConfidence}% confidence`, 'TEST');
@@ -888,6 +888,9 @@ function saveSettings(s) {
   CONFIG.settingsManager.saveSettings(s);
   // Reload config to pick up new settings
   CONFIG = new ParserConfig();
+  // Invalidate cached instances to pick up new config
+  EXTRACTORS = null;
+  FORMATTERS = null;
 }
 
 function configDialogHTML() {

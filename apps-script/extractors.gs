@@ -480,5 +480,12 @@ class FieldExtractors {
   }
 }
 
-// Export for use in other modules
-var EXTRACTORS = new FieldExtractors();
+// Export for use in other modules - lazy instantiation
+var EXTRACTORS = null;
+
+function getExtractors() {
+  if (!EXTRACTORS) {
+    EXTRACTORS = new FieldExtractors();
+  }
+  return EXTRACTORS;
+}

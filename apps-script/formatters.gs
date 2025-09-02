@@ -564,5 +564,12 @@ class OutputFormatters {
   }
 }
 
-// Export for use in other modules
-var FORMATTERS = new OutputFormatters();
+// Export for use in other modules - lazy instantiation
+var FORMATTERS = null;
+
+function getFormatters() {
+  if (!FORMATTERS) {
+    FORMATTERS = new OutputFormatters();
+  }
+  return FORMATTERS;
+}
