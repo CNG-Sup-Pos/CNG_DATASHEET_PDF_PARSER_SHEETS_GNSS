@@ -19,8 +19,8 @@ class ParserConfig {
       dimensions: {
         aliases: ["Dimensions", "Size", "Device size", "Housing", "Physical dimensions"],
         labelPatterns: [
-          /(?i)\b(Dimensions?|Size|Device size|Housing|Physical dimensions?)\b/,
-          /(?i)\b(L\s*[×x]\s*W\s*[×x]\s*H|Length\s*[×x]\s*Width\s*[×x]\s*Height)\b/
+          /\b(dimensions?|size|device\s+size|housing|physical\s+dimensions?)\b/i,
+          /\b(l\s*[×x]\s*w\s*[×x]\s*h|length\s*[×x]\s*width\s*[×x]\s*height)\b/i
         ],
         valuePatterns: [
           /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[×x*]\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[×x*]\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?/gi,
@@ -33,7 +33,7 @@ class ParserConfig {
       weight: {
         aliases: ["Weight", "Mass"],
         labelPatterns: [
-          /(?i)\b(Weight|Mass)\b/
+          /\b(weight|mass)\b/i
         ],
         valuePatterns: [
           /(\d+(?:[.,]\d+)?)\s*(g|kg|grams?|kilograms?)\b/gi,
@@ -46,8 +46,8 @@ class ParserConfig {
       operating_temperature: {
         aliases: ["Operating temperature", "Operating temp", "Temperature range", "Ambient temperature"],
         labelPatterns: [
-          /(?i)\b(Operating temp(?:erature)?|Temperature range|Ambient temp(?:erature)?)\b/,
-          /(?i)\b(Environmental|Temp\.?\s*range)\b/
+          /\b(operating\s+temp(?:erature)?|temperature\s+range|ambient\s+temp(?:erature)?)\b/i,
+          /\b(environmental|temp\.?\s*range)\b/i
         ],
         valuePatterns: [
           /([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C|deg\s*C)?\s*to\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C|deg\s*C)/gi,
@@ -60,7 +60,7 @@ class ParserConfig {
       storage_temperature: {
         aliases: ["Storage temperature", "Storage temp"],
         labelPatterns: [
-          /(?i)\b(Storage temp(?:erature)?)\b/
+          /\b(storage\s+temp(?:erature)?)\b/i
         ],
         valuePatterns: [
           /([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C)?\s*to\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C)/gi
@@ -72,8 +72,8 @@ class ParserConfig {
       input_voltage: {
         aliases: ["Input voltage", "Voltage range", "Supply voltage", "Power supply"],
         labelPatterns: [
-          /(?i)\b(Input voltage|Voltage range|Supply voltage|Power supply)\b/,
-          /(?i)\b(VDC|VAC|Voltage)\b/
+          /\b(input\s+voltage|voltage\s+range|supply\s+voltage|power\s+supply)\b/i,
+          /\b(vdc|vac|voltage)\b/i
         ],
         valuePatterns: [
           /(\d+(?:[.,]\d+)?)\s*[–-]\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V)/gi,
@@ -86,8 +86,8 @@ class ParserConfig {
       power_consumption: {
         aliases: ["Power consumption", "Typical power", "Max power", "Consumption"],
         labelPatterns: [
-          /(?i)\b(Power consumption|Typical power|Max power|Consumption)\b/,
-          /(?i)\b(Power|Watts?|W)\b/
+          /\b(power\s+consumption|typical\s+power|max\s+power|consumption)\b/i,
+          /\b(power|watts?|w)\b/i
         ],
         valuePatterns: [
           /(\d+(?:[.,]\d+)?)\s*(W|watts?)\b/gi,
@@ -100,12 +100,12 @@ class ParserConfig {
       imu: {
         aliases: ["IMU", "INS", "Inertial measurement", "Inertial sensors", "AHRS"],
         labelPatterns: [
-          /(?i)\b(IMU|INS|Inertial|AHRS)\b/,
-          /(?i)\b(Inertial measurement|Inertial sensors)\b/
+          /\b(imu|ins|inertial|ahrs)\b/i,
+          /\b(inertial\s+measurement|inertial\s+sensors)\b/i
         ],
         valuePatterns: [
-          /(?i)\b(MEMS|tactical|navigation|6-axis|9-axis|IMU|INS)\b/,
-          /(?i)\b(yes|no|available|included|optional)\b/
+          /\b(mems|tactical|navigation|6-axis|9-axis|imu|ins)\b/i,
+          /\b(yes|no|available|included|optional)\b/i
         ],
         unit: "text",
         format: "{description}"
@@ -114,8 +114,8 @@ class ParserConfig {
       accuracy: {
         aliases: ["Accuracy", "Position accuracy", "Horizontal accuracy", "RTK accuracy"],
         labelPatterns: [
-          /(?i)\b(Accuracy|Position accuracy|Horizontal accuracy|RTK accuracy)\b/,
-          /(?i)\b(RTK|DGPS|Precision)\b/
+          /\b(accuracy|position\s+accuracy|horizontal\s+accuracy|rtk\s+accuracy)\b/i,
+          /\b(rtk|dgps|precision)\b/i
         ],
         valuePatterns: [
           /(\d+(?:[.,]\d+)?)\s*(cm|mm|m)\s*(?:\+\s*(\d+(?:[.,]\d+)?)\s*ppm)?/gi,
@@ -128,7 +128,7 @@ class ParserConfig {
       latency: {
         aliases: ["Latency", "Output latency", "Data latency", "Position latency"],
         labelPatterns: [
-          /(?i)\b(Latency|Output latency|Data latency)\b/
+          /\b(latency|output\s+latency|data\s+latency)\b/i
         ],
         valuePatterns: [
           /(\d+(?:[.,]\d+)?)\s*(ms|milliseconds?)\b/gi,
@@ -141,8 +141,8 @@ class ParserConfig {
       frequency: {
         aliases: ["Update rate", "Measurement rate", "Position rate", "Frequency"],
         labelPatterns: [
-          /(?i)\b(Update rate|Measurement rate|Position rate|Frequency)\b/,
-          /(?i)\b(Hz|hertz)\b/
+          /\b(update\s+rate|measurement\s+rate|position\s+rate|frequency)\b/i,
+          /\b(hz|hertz)\b/i
         ],
         valuePatterns: [
           /(\d+(?:[.,]\d+)?)\s*(Hz|hertz)\b/gi,
@@ -155,7 +155,7 @@ class ParserConfig {
       time_sync: {
         aliases: ["Timing", "Time sync", "Time transfer", "1PPS", "Pulse-per-second"],
         labelPatterns: [
-          /(?i)\b(Timing|Time sync|1PPS|PPS|Pulse)\b/
+          /\b(timing|time\s+sync|1pps|pps|pulse)\b/i
         ],
         valuePatterns: [
           /(\d+(?:[.,]\d+)?)\s*(ns|μs|nanoseconds?|microseconds?)\b/gi,
@@ -168,11 +168,11 @@ class ParserConfig {
       measurement_types: {
         aliases: ["Measurements", "Observables", "Supported measurements"],
         labelPatterns: [
-          /(?i)\b(Measurements?|Observables?|Supported measurements?)\b/
+          /\b(measurements?|observables?|supported\s+measurements?)\b/i
         ],
         valuePatterns: [
-          /(?i)\b(RTK|PPP|DGPS|SBAS|Standalone)\b/,
-          /(?i)\b(Pseudorange|Carrier phase|Doppler)\b/
+          /\b(rtk|ppp|dgps|sbas|standalone)\b/i,
+          /\b(pseudorange|carrier\s+phase|doppler)\b/i
         ],
         unit: "list",
         format: "{types}"
@@ -181,7 +181,7 @@ class ParserConfig {
       ip_rating: {
         aliases: ["IP rating", "Protection", "Environmental rating", "Ruggedness"],
         labelPatterns: [
-          /(?i)\b(IP\s*rating|Protection|Environmental rating)\b/
+          /\b(ip\s*rating|protection|environmental\s+rating)\b/i
         ],
         valuePatterns: [
           /\b(IP\s*\d{2}[KX]?)\b/gi,
@@ -194,7 +194,7 @@ class ParserConfig {
       channels: {
         aliases: ["Channels", "Tracking channels", "Number of channels", "Hardware channels"],
         labelPatterns: [
-          /(?i)\b(Channels?|Tracking channels?|Number of channels?)\b/
+          /\b(channels?|tracking\s+channels?|number\s+of\s+channels?)\b/i
         ],
         valuePatterns: [
           /(\d{2,4})\s*(?:channels?|CH)\b/gi,
@@ -207,11 +207,11 @@ class ParserConfig {
       constellations: {
         aliases: ["Constellations", "GNSS signals", "Signals tracked", "Nav systems"],
         labelPatterns: [
-          /(?i)\b(Constellations?|GNSS signals?|Signals tracked|Nav systems?)\b/
+          /\b(constellations?|gnss\s+signals?|signals\s+tracked|nav\s+systems?)\b/i
         ],
         valuePatterns: [
-          /(?i)\b(GPS|GLONASS|Galileo|BeiDou|QZSS|NavIC|SBAS)\b/,
-          /(?i)\b(L1|L2|L5|E1|E5a?|E5b?|B1|B2)\b/
+          /\b(gps|glonass|galileo|beidou|qzss|navic|sbas)\b/i,
+          /\b(l1|l2|l5|e1|e5a?|e5b?|b1|b2)\b/i
         ],
         unit: "constellation list",
         format: "{constellations}"
@@ -220,11 +220,11 @@ class ParserConfig {
       interfaces: {
         aliases: ["Interfaces", "Connectivity", "I/O", "Ports", "Communication"],
         labelPatterns: [
-          /(?i)\b(Interfaces?|Connectivity|I\/O|Ports?|Communication)\b/
+          /\b(interfaces?|connectivity|i\/o|ports?|communication)\b/i
         ],
         valuePatterns: [
-          /(?i)\b(RS-?232|RS-?422|USB|Ethernet|CAN|Wi-?Fi|Bluetooth)\b/,
-          /(?i)\b(TCP\/IP|UDP|NMEA|Serial)\b/
+          /\b(rs-?232|rs-?422|usb|ethernet|can|wi-?fi|bluetooth)\b/i,
+          /\b(tcp\/ip|udp|nmea|serial)\b/i
         ],
         unit: "interface list",
         format: "{interfaces}"
@@ -233,11 +233,11 @@ class ParserConfig {
       formats: {
         aliases: ["Formats", "Output formats", "Data formats", "File formats"],
         labelPatterns: [
-          /(?i)\b(Formats?|Output formats?|Data formats?)\b/
+          /\b(formats?|output\s+formats?|data\s+formats?)\b/i
         ],
         valuePatterns: [
-          /(?i)\b(RTCM|RINEX|NMEA|SBF|UBX|CMR|SPARTN)\b/,
-          /(?i)\b(NMEA\s*0183|NMEA\s*2000|RTCM\s*v?3)\b/
+          /\b(rtcm|rinex|nmea|sbf|ubx|cmr|spartn)\b/i,
+          /\b(nmea\s*0183|nmea\s*2000|rtcm\s*v?3)\b/i
         ],
         unit: "format list",
         format: "{formats}"
@@ -246,7 +246,7 @@ class ParserConfig {
       warranty: {
         aliases: ["Warranty", "Guarantee", "Service", "Warranty period"],
         labelPatterns: [
-          /(?i)\b(Warranty|Guarantee|Service|Warranty period)\b/
+          /\b(warranty|guarantee|service|warranty\s+period)\b/i
         ],
         valuePatterns: [
           /(\d+)\s*(years?|months?|yrs?|mo)\b/gi,
@@ -259,11 +259,11 @@ class ParserConfig {
       firmware_options: {
         aliases: ["Options", "Variants", "Firmware options", "Software options"],
         labelPatterns: [
-          /(?i)\b(Options?|Variants?|Firmware options?|Software options?)\b/
+          /\b(options?|variants?|firmware\s+options?|software\s+options?)\b/i
         ],
         valuePatterns: [
-          /(?i)\b(Pro\+?|ProBase|Standard|Base|Professional)\b/,
-          /(?i)\b(IMU|L-band|RTK|PPP|option)\b/
+          /\b(pro\+?|probase|standard|base|professional)\b/i,
+          /\b(imu|l-band|rtk|ppp|option)\b/i
         ],
         unit: "option list",
         format: "{options}"
