@@ -26,6 +26,7 @@ function onOpen() {
     .addItem('Show Processing Log', 'showProcessingLog')
     .addSeparator()
     .addItem('Configure Settings', 'showConfigDialog')
+    .addItem('Advanced Settings', 'showAdvancedConfigDialog')
     .addItem('Setup Instructions', 'showSetupInstructions')
     .addToUi();
 }
@@ -880,8 +881,18 @@ function showConfigDialog() {
   SpreadsheetApp.getUi().showModalDialog(html, 'Parser Settings');
 }
 
+function showAdvancedConfigDialog() {
+  const html = HtmlService.createHtmlOutput(advancedConfigDialogHTML())
+    .setWidth(600).setHeight(500);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Advanced Parser Settings');
+}
+
 function getSettings() { 
   return CONFIG.settingsManager.getSettings(); 
+}
+
+function getAdvancedSettings() {
+  return CONFIG.settingsManager.getAdvancedSettings();
 }
 
 function saveSettings(s) { 
@@ -891,6 +902,36 @@ function saveSettings(s) {
   // Invalidate cached instances to pick up new config
   EXTRACTORS = null;
   FORMATTERS = null;
+}
+
+function saveSettingsWithValidation(settings) {
+  try {
+    CONFIG.settingsManager.saveSettings(settings);
+    // Reload config to pick up new settings
+    CONFIG = new ParserConfig();
+    // Invalidate cached instances to pick up new config
+    EXTRACTORS = null;
+    FORMATTERS = null;
+    return { success: true };
+  } catch (error) {
+    console.error('Settings save error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+function saveAdvancedSettingsWithValidation(settings) {
+  try {
+    CONFIG.settingsManager.saveAdvancedSettings(settings);
+    // Reload config to pick up new settings
+    CONFIG = new ParserConfig();
+    // Invalidate cached instances to pick up new config
+    EXTRACTORS = null;
+    FORMATTERS = null;
+    return { success: true };
+  } catch (error) {
+    console.error('Advanced settings save error:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 function configDialogHTML() {
@@ -975,11 +1016,430 @@ function configDialogHTML() {
       };
       
       google.script.run
-        .withSuccessHandler(() => {
-          alert('Settings saved successfully!');
-          google.script.host.close();
+        .withSuccessHandler((result) => {
+          if (result && result.success === false) {
+            alert('Error saving settings: ' + result.error);
+          } else {
+            alert('Settings saved successfully!');
+            google.script.host.close();
+          }
         })
-        .saveSettings(settings);
+        .withFailureHandler((error) => {
+          alert('Save failed: ' + error.message);
+        })
+        .saveSettingsWithValidation(settings);
+    }
+  </script>
+</body>
+</html>
+  `;
+}
+
+function advancedConfigDialogHTML() {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .tabs { border-bottom: 1px solid #ccc; margin-bottom: 20px; }
+    .tab { display: inline-block; padding: 10px 20px; cursor: pointer; background: #f5f5f5; border: 1px solid #ccc; border-bottom: none; margin-right: 5px; }
+    .tab.active { background: white; border-bottom: 1px solid white; margin-bottom: -1px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .setting { margin: 15px 0; }
+    .setting-group { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input[type="range"] { width: 200px; }
+    input[type="number"] { width: 80px; padding: 4px; }
+    input[type="checkbox"] { margin-right: 8px; }
+    .value { color: #4285f4; font-weight: bold; }
+    .buttons { text-align: center; margin-top: 20px; }
+    button { padding: 8px 16px; margin: 0 5px; }
+    .primary { background: #4285f4; color: white; border: none; }
+    .description { font-size: 12px; color: #666; margin-top: 5px; }
+    .field-list { 
+      max-height: 300px; 
+      overflow-y: auto; 
+      border: 1px solid #ddd; 
+      border-radius: 4px;
+      padding: 10px; 
+      background: #fafafa;
+    }
+    .field-item { 
+      margin: 4px 0; 
+      padding: 8px 12px; 
+      background: white; 
+      border: 1px solid #ddd;
+      border-radius: 4px; 
+      cursor: move;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+    .field-item:hover {
+      background: #f0f8ff;
+      border-color: #4285f4;
+    }
+    .field-item.dragging {
+      opacity: 0.5;
+      transform: rotate(2deg);
+    }
+    .field-item.drag-over {
+      border-top: 3px solid #4285f4;
+    }
+    .drag-handle {
+      color: #999;
+      margin-right: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Advanced Parser Settings</h3>
+  
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('proximity')">Proximity & Distance</div>
+    <div class="tab" onclick="showTab('sections')">Section Priorities</div>
+    <div class="tab" onclick="showTab('methods')">Extraction Methods</div>
+    <div class="tab" onclick="showTab('fields')">Field Priorities</div>
+  </div>
+  
+  <!-- Tab 1: Proximity & Distance -->
+  <div id="proximity" class="tab-content active">
+    <div class="setting-group">
+      <h4>Label-Value Association</h4>
+      <div class="setting">
+        <label>Max Label Distance: <span id="maxDistanceValue" class="value">200px</span></label>
+        <input type="range" id="maxDistance" min="50" max="500" value="200" 
+               oninput="updateValue('maxDistance', this.value + 'px')">
+        <div class="description">Maximum horizontal distance to consider a value for a label</div>
+      </div>
+      <div class="setting">
+        <label>Line Gap Tolerance: <span id="lineGapValue" class="value">1 line</span></label>
+        <input type="range" id="lineGap" min="0" max="5" value="1" 
+               oninput="updateValue('lineGap', this.value + ' line' + (this.value != 1 ? 's' : ''))">
+        <div class="description">Lines below a label to consider for values</div>
+      </div>
+      <div class="setting">
+        <label>Fuzzy Matching Threshold: <span id="fuzzyThresholdValue" class="value">80%</span></label>
+        <input type="range" id="fuzzyThreshold" min="60" max="95" value="80" 
+               oninput="updateValue('fuzzyThreshold', this.value + '%')">
+        <div class="description">Minimum similarity for label matching</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tab 2: Section Priorities -->
+  <div id="sections" class="tab-content">
+    <div class="setting-group">
+      <h4>Document Section Weights</h4>
+      <div class="setting">
+        <label>Performance/Environmental: <span id="perfWeightValue" class="value">40 pts</span></label>
+        <input type="range" id="perfWeight" min="20" max="50" value="40" 
+               oninput="updateValue('perfWeight', this.value + ' pts')">
+      </div>
+      <div class="setting">
+        <label>Technical Tables: <span id="techWeightValue" class="value">35 pts</span></label>
+        <input type="range" id="techWeight" min="15" max="40" value="35" 
+               oninput="updateValue('techWeight', this.value + ' pts')">
+      </div>
+      <div class="setting">
+        <label>Feature Lists: <span id="featureWeightValue" class="value">30 pts</span></label>
+        <input type="range" id="featureWeight" min="10" max="35" value="30" 
+               oninput="updateValue('featureWeight', this.value + ' pts')">
+      </div>
+      <div class="setting">
+        <label>Marketing Content: <span id="marketingWeightValue" class="value">10 pts</span></label>
+        <input type="range" id="marketingWeight" min="0" max="20" value="10" 
+               oninput="updateValue('marketingWeight', this.value + ' pts')">
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tab 3: Extraction Methods -->
+  <div id="methods" class="tab-content">
+    <div class="setting-group">
+      <h4>Extraction Options</h4>
+      <div class="setting">
+        <input type="checkbox" id="enableOCR" checked>
+        <label for="enableOCR" style="display: inline;">Enable OCR Fallback</label>
+        <div class="description">Use multiple OCR methods when direct extraction fails</div>
+      </div>
+      <div class="setting">
+        <input type="checkbox" id="enableProximity" checked>
+        <label for="enableProximity" style="display: inline;">Proximity-Based Association</label>
+        <div class="description">Associate values with labels based on distance</div>
+      </div>
+      <div class="setting">
+        <input type="checkbox" id="enablePattern" checked>
+        <label for="enablePattern" style="display: inline;">Pattern-Based Extraction</label>
+        <div class="description">Use regex patterns for value extraction</div>
+      </div>
+      <div class="setting">
+        <input type="checkbox" id="enableAdaptive" checked>
+        <label for="enableAdaptive" style="display: inline;">Adaptive Recovery</label>
+        <div class="description">Multi-tier fallback when standard extraction fails</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tab 4: Field Priorities -->
+  <div id="fields" class="tab-content">
+    <div class="setting-group">
+      <h4>Extraction Order</h4>
+      <div class="description">Fields are processed in this order (drag to reorder):</div>
+      <div class="field-list" id="fieldList">
+        <!-- Field items will be loaded dynamically -->
+      </div>
+    </div>
+  </div>
+  
+  <div class="buttons">
+    <button class="primary" onclick="saveAdvanced()">Save Advanced Settings</button>
+    <button onclick="resetDefaults()">Reset to Defaults</button>
+    <button onclick="google.script.host.close()">Cancel</button>
+  </div>
+  
+  <script>
+    // Load current advanced settings
+    google.script.run
+      .withSuccessHandler(loadAdvancedSettings)
+      .getAdvancedSettings();
+    
+    function showTab(tabName) {
+      // Hide all tab contents
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach(content => content.classList.remove('active'));
+      
+      // Remove active class from all tabs
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      
+      // Show selected tab content
+      document.getElementById(tabName).classList.add('active');
+      
+      // Add active class to clicked tab
+      event.target.classList.add('active');
+    }
+    
+    function updateValue(id, value) {
+      document.getElementById(id + 'Value').textContent = value;
+    }
+    
+    function loadAdvancedSettings(settings) {
+      // Load proximity settings
+      if (settings.proximity) {
+        document.getElementById('maxDistance').value = settings.proximity.maxDistance || 200;
+        document.getElementById('lineGap').value = settings.proximity.lineGap || 1;
+        document.getElementById('fuzzyThreshold').value = settings.proximity.fuzzyThreshold || 80;
+        
+        updateValue('maxDistance', (settings.proximity.maxDistance || 200) + 'px');
+        updateValue('lineGap', (settings.proximity.lineGap || 1) + ' line' + ((settings.proximity.lineGap || 1) != 1 ? 's' : ''));
+        updateValue('fuzzyThreshold', (settings.proximity.fuzzyThreshold || 80) + '%');
+      }
+      
+      // Load section weights
+      if (settings.sectionWeights) {
+        document.getElementById('perfWeight').value = settings.sectionWeights.performance || 40;
+        document.getElementById('techWeight').value = settings.sectionWeights.technical || 35;
+        document.getElementById('featureWeight').value = settings.sectionWeights.features || 30;
+        document.getElementById('marketingWeight').value = settings.sectionWeights.marketing || 10;
+        
+        updateValue('perfWeight', (settings.sectionWeights.performance || 40) + ' pts');
+        updateValue('techWeight', (settings.sectionWeights.technical || 35) + ' pts');
+        updateValue('featureWeight', (settings.sectionWeights.features || 30) + ' pts');
+        updateValue('marketingWeight', (settings.sectionWeights.marketing || 10) + ' pts');
+      }
+      
+      // Load method settings
+      if (settings.methods) {
+        document.getElementById('enableOCR').checked = settings.methods.enableOCR !== false;
+        document.getElementById('enableProximity').checked = settings.methods.enableProximity !== false;
+        document.getElementById('enablePattern').checked = settings.methods.enablePattern !== false;
+        document.getElementById('enableAdaptive').checked = settings.methods.enableAdaptive !== false;
+      }
+      
+      // Load field priorities and create draggable list
+      loadFieldPriorities(settings.fieldPriorities);
+    }
+    
+    function loadFieldPriorities(priorities) {
+      const fieldNames = {
+        'dimensions': 'Dimensions',
+        'weight': 'Weight',
+        'operating_temperature': 'Operating Temperature',
+        'storage_temperature': 'Storage Temperature',
+        'input_voltage': 'Input Voltage',
+        'power_consumption': 'Power Consumption',
+        'imu': 'IMU',
+        'accuracy': 'Accuracy',
+        'latency': 'Latency',
+        'frequency': 'Frequency',
+        'time_sync': 'Time Sync',
+        'measurement_types': 'Measurement Types',
+        'ip_rating': 'IP Rating',
+        'channels': 'Channels',
+        'constellations': 'Constellations',
+        'interfaces': 'Interfaces',
+        'formats': 'Formats',
+        'warranty': 'Warranty'
+      };
+      
+      const defaultOrder = [
+        'dimensions', 'weight', 'operating_temperature', 'storage_temperature',
+        'input_voltage', 'power_consumption', 'imu', 'accuracy', 'latency',
+        'frequency', 'time_sync', 'measurement_types', 'ip_rating', 'channels',
+        'constellations', 'interfaces', 'formats', 'warranty'
+      ];
+      
+      const fieldOrder = priorities || defaultOrder;
+      const fieldList = document.getElementById('fieldList');
+      fieldList.innerHTML = '';
+      
+      fieldOrder.forEach((fieldKey, index) => {
+        const div = document.createElement('div');
+        div.className = 'field-item';
+        div.draggable = true;
+        div.dataset.field = fieldKey;
+        div.innerHTML = `
+          <span class="drag-handle">≡</span>
+          <span>${index + 1}. ${fieldNames[fieldKey] || fieldKey}</span>
+        `;
+        
+        // Add drag event listeners
+        div.addEventListener('dragstart', onDragStart);
+        div.addEventListener('dragover', onDragOver);
+        div.addEventListener('drop', onDrop);
+        div.addEventListener('dragend', onDragEnd);
+        
+        fieldList.appendChild(div);
+      });
+    }
+    
+    let draggedElement = null;
+    
+    function onDragStart(e) {
+      draggedElement = this;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', this.outerHTML);
+    }
+    
+    function onDragOver(e) {
+      if (e.preventDefault) e.preventDefault();
+      
+      this.classList.add('drag-over');
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+    
+    function onDrop(e) {
+      if (e.stopPropagation) e.stopPropagation();
+      
+      if (draggedElement !== this) {
+        // Insert the dragged element before this element
+        this.parentNode.insertBefore(draggedElement, this);
+        updateFieldNumbers();
+      }
+      
+      this.classList.remove('drag-over');
+      return false;
+    }
+    
+    function onDragEnd(e) {
+      this.classList.remove('dragging');
+      
+      // Remove drag-over class from all items
+      const items = document.querySelectorAll('.field-item');
+      items.forEach(item => item.classList.remove('drag-over'));
+      
+      draggedElement = null;
+    }
+    
+    function updateFieldNumbers() {
+      const items = document.querySelectorAll('.field-item');
+      items.forEach((item, index) => {
+        const span = item.querySelector('span:last-child');
+        const fieldName = span.textContent.replace(/^\d+\.\s*/, '');
+        span.textContent = `${index + 1}. ${fieldName}`;
+      });
+    }
+    
+    function getFieldPriorities() {
+      const items = document.querySelectorAll('.field-item');
+      return Array.from(items).map(item => item.dataset.field);
+    }
+    
+    function saveAdvanced() {
+      const settings = {
+        proximity: {
+          maxDistance: parseInt(document.getElementById('maxDistance').value),
+          lineGap: parseInt(document.getElementById('lineGap').value),
+          fuzzyThreshold: parseInt(document.getElementById('fuzzyThreshold').value)
+        },
+        sectionWeights: {
+          performance: parseInt(document.getElementById('perfWeight').value),
+          technical: parseInt(document.getElementById('techWeight').value),
+          features: parseInt(document.getElementById('featureWeight').value),
+          marketing: parseInt(document.getElementById('marketingWeight').value)
+        },
+        methods: {
+          enableOCR: document.getElementById('enableOCR').checked,
+          enableProximity: document.getElementById('enableProximity').checked,
+          enablePattern: document.getElementById('enablePattern').checked,
+          enableAdaptive: document.getElementById('enableAdaptive').checked
+        },
+        fieldPriorities: getFieldPriorities()
+      };
+      
+      google.script.run
+        .withSuccessHandler((result) => {
+          if (result && result.success === false) {
+            alert('Error saving advanced settings: ' + result.error);
+          } else {
+            alert('Advanced settings saved successfully!');
+            google.script.host.close();
+          }
+        })
+        .withFailureHandler((error) => {
+          alert('Save failed: ' + error.message);
+        })
+        .saveAdvancedSettingsWithValidation(settings);
+    }
+    
+    function resetDefaults() {
+      if (confirm('Reset all advanced settings to defaults?')) {
+        // Reset proximity settings
+        document.getElementById('maxDistance').value = 200;
+        document.getElementById('lineGap').value = 1;
+        document.getElementById('fuzzyThreshold').value = 80;
+        
+        updateValue('maxDistance', '200px');
+        updateValue('lineGap', '1 line');
+        updateValue('fuzzyThreshold', '80%');
+        
+        // Reset section weights
+        document.getElementById('perfWeight').value = 40;
+        document.getElementById('techWeight').value = 35;
+        document.getElementById('featureWeight').value = 30;
+        document.getElementById('marketingWeight').value = 10;
+        
+        updateValue('perfWeight', '40 pts');
+        updateValue('techWeight', '35 pts');
+        updateValue('featureWeight', '30 pts');
+        updateValue('marketingWeight', '10 pts');
+        
+        // Reset method checkboxes
+        document.getElementById('enableOCR').checked = true;
+        document.getElementById('enableProximity').checked = true;
+        document.getElementById('enablePattern').checked = true;
+        document.getElementById('enableAdaptive').checked = true;
+        
+        // Reset field priorities to default order
+        loadFieldPriorities(null);
+      }
     }
   </script>
 </body>

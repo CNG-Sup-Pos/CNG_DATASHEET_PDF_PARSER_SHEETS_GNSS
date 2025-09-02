@@ -22,12 +22,46 @@ class SettingsManager {
   saveSettings(settings) {
     this.properties.setProperty('GNSS_SETTINGS', JSON.stringify(settings));
   }
+  
+  getAdvancedSettings() {
+    const stored = this.properties.getProperty('GNSS_ADVANCED_SETTINGS');
+    return stored ? JSON.parse(stored) : {
+      proximity: {
+        maxDistance: 200,
+        lineGap: 1,
+        fuzzyThreshold: 80
+      },
+      sectionWeights: {
+        performance: 40,
+        technical: 35,
+        features: 30,
+        marketing: 10
+      },
+      methods: {
+        enableOCR: true,
+        enableProximity: true,
+        enablePattern: true,
+        enableAdaptive: true
+      },
+      fieldPriorities: [
+        'dimensions', 'weight', 'operating_temperature', 'storage_temperature',
+        'input_voltage', 'power_consumption', 'imu', 'accuracy', 'latency',
+        'frequency', 'time_sync', 'measurement_types', 'ip_rating', 'channels',
+        'constellations', 'interfaces', 'formats', 'warranty'
+      ]
+    };
+  }
+  
+  saveAdvancedSettings(settings) {
+    this.properties.setProperty('GNSS_ADVANCED_SETTINGS', JSON.stringify(settings));
+  }
 }
 
 class ParserConfig {
   constructor() {
     this.settingsManager = new SettingsManager();
     this.userSettings = this.settingsManager.getSettings();
+    this.advancedSettings = this.settingsManager.getAdvancedSettings();
     this.fieldPatterns = this.loadFieldPatterns();
     this.validationRules = this.loadValidationRules();
     this.outputFormatting = this.loadOutputFormatting();
@@ -426,6 +460,34 @@ class ParserConfig {
    */
   getFieldValidation(fieldName) {
     return this.validationRules.fieldRules[fieldName];
+  }
+
+  /**
+   * Get advanced proximity settings
+   */
+  getProximitySettings() {
+    return this.advancedSettings.proximity;
+  }
+
+  /**
+   * Get section priority weights
+   */
+  getSectionWeights() {
+    return this.advancedSettings.sectionWeights;
+  }
+
+  /**
+   * Get extraction method settings
+   */
+  getExtractionMethods() {
+    return this.advancedSettings.methods;
+  }
+
+  /**
+   * Get field priority order (may be customized by user)
+   */
+  getCustomFieldPriority() {
+    return this.advancedSettings.fieldPriorities || this.fieldPriority;
   }
 }
 
