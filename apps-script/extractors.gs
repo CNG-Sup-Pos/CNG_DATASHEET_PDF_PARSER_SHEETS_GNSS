@@ -5,7 +5,15 @@
 
 class FieldExtractors {
   constructor() {
-    this.config = CONFIG;
+    // Lazy load config to avoid initialization order issues
+    this.config = null;
+  }
+
+  getConfig() {
+    if (!this.config) {
+      this.config = CONFIG;
+    }
+    return this.config;
   }
 
   /**
@@ -13,7 +21,7 @@ class FieldExtractors {
    */
   extractAllFields(pdfText) {
     const results = {};
-    const fieldNames = this.config.getFieldNames();
+    const fieldNames = this.getConfig().getFieldNames();
     
     for (const fieldName of fieldNames) {
       try {
@@ -36,7 +44,7 @@ class FieldExtractors {
    * Extract a specific field using its configuration
    */
   extractField(fieldName, pdfText) {
-    const fieldConfig = this.config.getFieldConfig(fieldName);
+    const fieldConfig = this.getConfig().getFieldConfig(fieldName);
     if (!fieldConfig) {
       throw new Error(`No configuration found for field: ${fieldName}`);
     }
