@@ -1,0 +1,61 @@
+firmware_options_parser — extraction & normalization rules
+
+Label detection
+
+Match aliases: Options, Variants, Firmware options, Software options, Pro, Pro+, ProBase, Feature key, License, Optional feature, Variants/Options.
+
+Look in OPTIONS, PRODUCT VARIANTS, ORDERING INFORMATION, or near SKU tables.
+
+Candidate selection
+
+Capture nearby lists/table rows with variant names, option codes, or license descriptions. Vendors often list RB3 Pro / RB3 Pro+ or Option: INS, Option: L-band.
+
+Tokenization
+
+Split tokens on , ; / | and table cells. Recognize SKU patterns and short tags (Pro+, ProBase, +IMU, L-band option, RTK server license).
+
+Canonical mapping
+
+Canonical fields: variant_name, option_key, feature_list, license_required (boolean), notes.
+
+Standardize common option types: IMU/INS, L-band/PPP, High-rate, Memory module, RTX subscription, Base station SW, Pro license.
+
+Parsing & normalization rules
+
+Produce structured outputs like:
+
+Variants: RB3 Pro; RB3 Pro+
+
+Options: IMU (optional feature key), L-band (option), Pro+ (firmware license)
+
+If options have codes (e.g., OPT-IMU), capture code and human label.
+
+Versioning & licensing details
+
+Capture whether option is firmware-only, license-key activated, or hardware-option. Map firmware vs hardware if described: Pro+ (firmware upgrade) vs ProBase (hardware).
+
+Ambiguity resolution
+
+If vendor shows Pro / Pro+ but does not list difference, record both and add Notes: no difference documented.
+
+If option listed with price or SKU, capture SKU into option_key and price into Notes.
+
+Confidence scoring
+
+High: explicit option name + description and license mention.
+
+Medium: variant listed but no description.
+
+Low: ambiguous acronym or single-letter suffix; preserve raw token.
+
+Fallback & logging
+
+If options only appear in ordering table, parse that table and map SKUs to variants. Log mapping decisions.
+
+If an option appears across pages with different descriptors, record both and log discrepancy.
+
+Examples
+
+Options: IMU (optional, feature key IMU-01), L-band (opt), Pro+ (adds 100 Hz) → Options: IMU (feature key IMU-01); L-band (optional); Pro+ (high-rate firmware, 100 Hz).
+
+Variants: SB3 Pro, SB3 ProBase → Variants: SB3 Pro; SB3 ProBase.

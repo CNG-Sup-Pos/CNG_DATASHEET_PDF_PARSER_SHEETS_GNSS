@@ -1,0 +1,689 @@
+# field_aliases.yaml
+# Canonical field -> aliases + label regexes + value regexes
+# Label regexes are patterns to find the label text (case-insensitive).
+# Value regexes are robust patterns that capture the value(s) following the label
+# or that match value tokens when label proximity is used (units, separators, formats).
+
+Model:
+  aliases:
+    - "Model"
+    - "Product"
+    - "Product name"
+    - "Model name"
+    - "Part number"
+    - "SKU"
+    - "Receiver model"
+    - "Antenna model"
+    - "Type"
+  label_patterns:
+    - '(?i)\\b(Model|Product(?!s?)|Product name|Model name|Part\\s*no\\.?|Part number|SKU|Type)\\b'
+  value_patterns:
+    - '(?i)\\b([A-Za-z0-9\\-_/\\+\\s\\.]+)\\b'   # fallback: alphanumeric model token
+
+Form Factor:
+  aliases:
+    - "Form factor"
+    - "Form-factor"
+    - "Form"
+    - "Enclosure"
+    - "Product type"
+    - "Housed"
+    - "Board"
+    - "Module"
+    - "Smart antenna"
+    - "OEM board"
+  label_patterns:
+    - '(?i)\\b(Form[ -]?factor|Enclosure|Product type|Housed|OEM board|Module|Smart antenna)\\b'
+  value_patterns:
+    - '(?i)\\b(board|receiver|smart antenna|housed|module|OEM|compact|rugged|housed unit|base station|rover)\\b'
+
+INS:
+  aliases:
+    - "INS"
+    - "GNSS/INS"
+    - "Inertial"
+    - "Inertial Navigation System"
+    - "IMU"
+    - "Integrated IMU"
+    - "Inertial sensor"
+    - "AHRS"
+  label_patterns:
+    - '(?i)\\b(INS|GNSS\\s*/\\s*INS|Inertial|Inertial Navigation System|IMU|AHRS|Inertial sensor)\\b'
+  value_patterns:
+    - '(?i)\\b(yes|no|optional|integrated|internal|external|embedded|\\bIMU\\b|\\bgyro\\b)\\b'
+    - '(?i)\\b(\\+?\\d+\\.?\\d*°/?s|bias|noise|\\bgyro\\b|accelerometer|g)\\b'  # IMU spec tokens
+
+RTK Accuracy:
+  aliases:
+    - "RTK accuracy"
+    - "RTK performance"
+    - "RTK-INS"
+    - "Position accuracy (RTK)"
+    - "Horizontal accuracy"
+    - "Vertical accuracy"
+    - "Fixed accuracy"
+    - "Ambiguity-fixed accuracy"
+  label_patterns:
+    - '(?i)\\b(RTK(\\s*performance|\\s*accuracy)?|Position(\\s*accuracy)?\\s*\\(RTK\\)|Horizontal accuracy|Vertical accuracy|Fixed accuracy|Ambiguity[- ]?fixed)\\b'
+  value_patterns:
+    - '(?i)(?:Horizontal[:\\s]*)?([0-9]{1,3}(?:\\.[0-9]+)?\\s*(?:cm|m)\\s*(?:\\+\\s*[0-9]{1,3}\\s*ppm)?)'
+    - '(?i)(?:Vertical[:\\s]*)?([0-9]{1,3}(?:\\.[0-9]+)?\\s*(?:cm|m)\\s*(?:\\+\\s*[0-9]{1,3}\\s*ppm)?)'
+    - '(?i)([0-9]{1,3}(?:\\.[0-9]+)?\\s*cm\\s*(?:\\+\\s*[0-9]{1,3}\\s*ppm)?)'  # generic
+
+Update Rate:
+  aliases:
+    - "Update rate"
+    - "Maximum update rate"
+    - "Position update rate"
+    - "Output rate"
+    - "Measurement rate"
+    - "Navigation rate"
+    - "Position and attitude rate"
+    - "Max update rate"
+    - "Hz"
+  label_patterns:
+    - '(?i)\\b(Max(imum)?\\s*update rate|Update rate|Position( and| &) attitude rate|Output rate|Measurement rate|Navigation rate)\\b'
+  value_patterns:
+    - '(?i)([0-9]{1,4}\\s*(?:Hz|hz))'
+    - '(?i)(Position\\s*[:\\s]*[0-9]{1,4}\\s*Hz)'
+    - '(?i)(Position and attitude\\s*[:\\s]*[0-9]{1,4}\\s*/\\s*[0-9]{1,4}\\s*Hz)'
+
+Heading:
+  aliases:
+    - "Heading"
+    - "GNSS heading"
+    - "Heading accuracy"
+    - "Attitude"
+    - "Pitch / Roll / Heading"
+    - "Multi-antenna heading"
+    - "Heading performance"
+  label_patterns:
+    - '(?i)\\b(Heading( accuracy)?|GNSS heading|Attitude|Pitch\\s*/\\s*Roll\\s*/\\s*Heading|Multi[- ]antenna heading)\\b'
+  value_patterns:
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*°)'
+    - '(?i)(heading[:\\s]*yes|heading[:\\s]*no|precision|sub[- ]degree|sub-degree)'
+
+Constellations_Bands:
+  aliases:
+    - "Constellations"
+    - "GNSS signals"
+    - "Bands"
+    - "Frequencies"
+    - "Signals tracked"
+    - "Supported constellations"
+    - "Nav systems"
+  label_patterns:
+    - '(?i)\\b(Constellations|GNSS signals|Signals tracked|Frequencies|Supported constellations|Nav systems)\\b'
+  value_patterns:
+    - '(?i)(GPS[:\\s]*[a-zA-Z0-9/\\s,\\-]+|GLONASS[:\\s]*[a-zA-Z0-9/\\s,\\-]+|BeiDou|Galileo|QZSS|NavIC|SBAS|L1|L2|L5|E1|E5)'
+    - '(?i)\\b(GPS|GLONASS|Galileo|BeiDou|QZSS|NavIC|SBAS)\\b'
+
+Channels:
+  aliases:
+    - "Channels"
+    - "Hardware channels"
+    - "Tracking channels"
+    - "Number of channels"
+    - "CH"
+  label_patterns:
+    - '(?i)\\b(Channels|Hardware channels|Tracking channels|Number of channels|CH)\\b'
+  value_patterns:
+    - '(?i)\\b([0-9]{2,4})\\s*(?:hardware channels|channels|CH)?\\b'
+
+IMU_Spec:
+  aliases:
+    - "IMU"
+    - "IMU performance"
+    - "Gyroscope"
+    - "Gyro"
+    - "Accelerometer"
+    - "Bias in-run"
+    - "Random walk"
+  label_patterns:
+    - '(?i)\\b(IMU|IMU performance|Gyroscope|Gyro|Accelerometer|Bias in-run|Random walk)\\b'
+  value_patterns:
+    - '(?i)(±?\\s*[0-9]+(?:\\.[0-9]+)?\\s*°\\/s|bias\\s*(?:in-run)?\\s*instability|[0-9]+(?:\\.[0-9]+)?\\s*μg|noise density)'
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*°\\/√hr|[0-9]+(?:\\.[0-9]+)?\\s*μg\\/√Hz)'
+
+Interfaces:
+  aliases:
+    - "Interfaces"
+    - "Connectivity"
+    - "I/O"
+    - "Ports"
+    - "RS232"
+    - "RS422"
+    - "USB"
+    - "Ethernet"
+    - "CAN"
+    - "CAN-FD"
+    - "NMEA"
+    - "PPS"
+  label_patterns:
+    - '(?i)\\b(Interfaces|Connectivity|I/?O|Ports|Communications|Connections|Connectors)\\b'
+  value_patterns:
+    - '(?i)\\b(RS-?232|RS-?422|USB|Ethernet|LAN|TCP/IP|UDP|CAN(?:-FD)?|NMEA|NMEA 0183|NMEA 2000|Wi-?Fi|Bluetooth|BT|Cellular|LTE|4G|Souriau|ODU|TE AmpSeal)\\b'
+
+Corrections_IO:
+  aliases:
+    - "Corrections I/O"
+    - "Corrections"
+    - "RTCM"
+    - "CMR"
+    - "NTRIP"
+    - "L-band"
+    - "RTX"
+    - "PPP"
+    - "SSR"
+    - "CLAS"
+  label_patterns:
+    - '(?i)\\b(Corrections I/?O|Corrections|RTCM|CMR|NTRIP|L-?band|RTX|PPP|SSR|CLAS|QZSS CLAS)\\b'
+  value_patterns:
+    - '(?i)\\b(RTCM v?2(?:\\.x)?|RTCM v?3(?:\\.x)?|MSM|CMR\\+?|NTRIP (?:client|server|caster)|L-?band|RTX|CLAS|PPP|SSR)\\b'
+
+Internal_Memory:
+  aliases:
+    - "Internal memory"
+    - "Storage"
+    - "Onboard memory"
+    - "Flash"
+    - "Logging memory"
+  label_patterns:
+    - '(?i)\\b(Internal memory|Onboard memory|Storage|Flash|Logging memory)\\b'
+  value_patterns:
+    - '(?i)([0-9]{1,4}\\s*(?:GB|MB|TB))'
+    - '(?i)\\b(None|No internal memory|N/A)\\b'
+
+Power:
+  aliases:
+    - "Power"
+    - "Input voltage"
+    - "Voltage"
+    - "Power consumption"
+    - "Typical power"
+    - "PoE"
+    - "Power over Ethernet"
+    - "Battery"
+  label_patterns:
+    - '(?i)\\b(Power( consumption)?|Input voltage|Voltage|PoE|Power over Ethernet|Battery)\\b'
+  value_patterns:
+    - '(?i)([0-9]{1,3}\\s*(?:V|VDC|VAC)(?:\\s*[-–to]{1,3}\\s*[0-9]{1,3}\\s*(?:V|VDC|VAC))?)'
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*(?:W|mW))'
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*mA)'
+
+Weight:
+  aliases:
+    - "Weight"
+    - "Mass"
+    - "Weight (kg)"
+    - "Weight (g)"
+  label_patterns:
+    - '(?i)\\b(Weight|Mass|Net weight|Gross weight)\\b'
+  value_patterns:
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*(?:g|kg))'
+
+Dimensions:
+  aliases:
+    - "Dimensions"
+    - "Size"
+    - "Device size"
+    - "Physical dimensions"
+    - "L x W x H"
+    - "SWaP"
+  label_patterns:
+    - '(?i)\\b(Dimensions|Size|Device size|Physical dimensions|L\\s*[x×*]\\s*W\\s*[x×*]\\s*H|SWaP)\\b'
+  value_patterns:
+    # capture 2 or 3 numbers with separators x, ×, *, · or spaces, optional units after each or at end
+    - '(?i)\\b([0-9]{1,4}(?:[\\.,][0-9]+)?\\s*(?:mm|cm|m)?\\s*(?:[x×\\*\\u00D7\\s]\\s*[0-9]{1,4}(?:[\\.,][0-9]+)?\\s*(?:mm|cm|m)?)(?:[x×\\*\\u00D7\\s]\\s*[0-9]{1,4}(?:[\\.,][0-9]+)?\\s*(?:mm|cm|m)?)?)\\b'
+    - '(?i)\\b([0-9]{1,4}\\s*mm\\s*[x×\\*]\\s*[0-9]{1,4}\\s*mm(?:\\s*[x×\\*]\\s*[0-9]{1,4}\\s*mm)?)\\b'
+    - '(?i)\\b([0-9]{1,4}\\s*[x×\\*]\\s*[0-9]{1,4}\\s*[x×\\*]\\s*[0-9]{1,4}\\s*(?:mm|cm)?)\\b'
+
+IP_Rating:
+  aliases:
+    - "Ingress protection"
+    - "IP rating"
+    - "IP"
+    - "Environmental protection"
+  label_patterns:
+    - '(?i)\\b(Ingress protection|IP rating|IP|Ingress Prot\\.?|Environmental protection)\\b'
+  value_patterns:
+    - '(?i)\\b(IP\\s*6[0-9]K?|IP\\s*6[0-9]|IP\\s*[0-6][0-9])\\b'
+    - '(?i)\\b(IP6[89]K?)\\b'
+
+Temperature_Range:
+  aliases:
+    - "Operating temperature"
+    - "Temperature range"
+    - "Operating temp"
+    - "Storage temperature"
+    - "Storage temp"
+  label_patterns:
+    - '(?i)\\b(Operating temperature|Temperature range|Operating temp|Storage temperature|Storage temp)\\b'
+  value_patterns:
+    - '(?i)([\\-–]?[0-9]{1,3}°\\s*C\\s*(?:to|\\-|–)\\s*[\\-–]?[0-9]{1,3}°\\s*C)'
+    - '(?i)([\\-–]?[0-9]{1,3}\\s*°C)'
+
+Time_Precision_PPS:
+  aliases:
+    - "Time accuracy"
+    - "Timing"
+    - "PPS"
+    - "1PPS"
+    - "xPPS"
+    - "Time precision"
+    - "Event accuracy"
+    - "Time pulse"
+  label_patterns:
+    - '(?i)\\b(Time accuracy|Timing|PPS|1PPS|xPPS|Time precision|Event accuracy|Time pulse)\\b'
+  value_patterns:
+    - '(?i)([0-9]+\\s*ns|[0-9]+\\s*ns\\b)'
+    - '(?i)(<\\s*[0-9]+\\s*ns)'
+
+TTFF:
+  aliases:
+    - "Time to first fix"
+    - "TTFF"
+    - "Cold start"
+    - "Warm start"
+    - "Hot start"
+    - "Re-acquisition"
+  label_patterns:
+    - '(?i)\\b(Time to first fix|TTFF|Cold start|Warm start|Hot start|Re-acquisition)\\b'
+  value_patterns:
+    - '(?i)(Cold start[:\\s]*<\\s*[0-9]{1,4}\\s*s|Warm start[:\\s]*<\\s*[0-9]{1,4}\\s*s|<\\s*[0-9]{1,4}\\s*s)'
+
+Latency:
+  aliases:
+    - "Latency"
+    - "Output latency"
+    - "Data latency"
+    - "Processing latency"
+  label_patterns:
+    - '(?i)\\b(Latency|Output latency|Data latency|Processing latency)\\b'
+  value_patterns:
+    - '(?i)(<\\s*[0-9]{1,4}\\s*ms|[0-9]{1,4}\\s*ms)'
+
+Measurement_Precision:
+  aliases:
+    - "Measurement precision"
+    - "Pseudorange precision"
+    - "Carrier phase precision"
+    - "C/N0 threshold"
+    - "Tracking performance"
+    - "Acquisition threshold"
+  label_patterns:
+    - '(?i)\\b(Measurement precision|Pseudorange precision|Carrier phase precision|C\\/N0 threshold|Tracking performance|Acquisition threshold)\\b'
+  value_patterns:
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*(?:cm|mm|m)|C\\/N0\\s*[:\\s]*[0-9]+\\s*dB-Hz)'
+
+Tracking_Performance:
+  aliases:
+    - "Tracking performance"
+    - "C/N0"
+    - "Acquisition"
+    - "Tracking"
+  label_patterns:
+    - '(?i)\\b(Tracking performance|C\\/N0|Acquisition threshold|Tracking|Acquisition)\\b'
+  value_patterns:
+    - '(?i)(Tracking\\s*[:\\s]*[0-9]+\\s*dB-Hz|Acquisition\\s*[:\\s]*[0-9]+\\s*dB-Hz|[0-9]+\\s*dB-Hz)'
+
+RINEX_Logging:
+  aliases:
+    - "RINEX"
+    - "RINEX logging"
+    - "Raw observation logging"
+  label_patterns:
+    - '(?i)\\b(RINEX|RINEX logging|RINEX v[23]|Raw observation logging|Raw data)\\b'
+  value_patterns:
+    - '(?i)\\b(RINEX v?2(?:\\.x)?|RINEX v?3(?:\\.x)?)\\b'
+
+Formats:
+  aliases:
+    - "Formats"
+    - "Output formats"
+    - "Input formats"
+    - "SBF"
+    - "Septentrio Binary Format"
+    - "NMEA"
+    - "CSV"
+  label_patterns:
+    - '(?i)\\b(Formats|Output formats|Input formats|SBF|Septentrio Binary Format|NMEA|CSV)\\b'
+  value_patterns:
+    - '(?i)\\b(SBF|NMEA(?: 0183| 2000)?|RTCM|CMR|CSV|UBX|SPARTN)\\b'
+
+SDK_WebUI:
+  aliases:
+    - "Web UI"
+    - "Web interface"
+    - "RxTools"
+    - "SDK"
+    - "API"
+  label_patterns:
+    - '(?i)\\b(Web UI|Web interface|RxTools|SDK|API|Software tools)\\b'
+  value_patterns:
+    - '(?i)\\b(Web ?UI|RxTools|SDK|API|GNSS receiver communication SDK|command line)\\b'
+
+Antenna_Connector:
+  aliases:
+    - "Antenna connector"
+    - "Connector"
+    - "TNC"
+    - "SMA"
+    - "N-type"
+    - "ODU"
+    - "Souriau"
+  label_patterns:
+    - '(?i)\\b(Antenna connector|Connector|TNC|SMA|N-?type|ODU|Souriau|TE AmpSeal)\\b'
+  value_patterns:
+    - '(?i)\\b(TNC|SMA|N-?type|ODU|Souriau|TE AmpSeal)\\b'
+
+Antenna_LNA_Power:
+  aliases:
+    - "Antenna LNA power"
+    - "LNA power"
+    - "Antenna power out"
+  label_patterns:
+    - '(?i)\\b(Antenna LNA power|LNA power|Antenna power out|LNA output)\\b'
+  value_patterns:
+    - '(?i)([0-9]{1,3}\\s*V(?:DC)?\\s*(?:\\,|\\s*;)?\\s*[0-9]{1,4}\\s*mA|[0-9]{1,3}\\s*V\\s*[0-9]{1,4}\\s*mA)'
+    - '(?i)([0-9]{1,3}\\s*V)'
+
+Antenna_Type:
+  aliases:
+    - "Antenna type"
+    - "Choke ring"
+    - "Patch antenna"
+    - "Helix"
+    - "Dual-feed"
+    - "Multi-feed"
+  label_patterns:
+    - '(?i)\\b(Antenna type|Choke ring|Patch antenna|Helix|Dual-feed|Multi-feed)\\b'
+  value_patterns:
+    - '(?i)\\b(choke ring|patch|helix|dual[- ]feed|multi[- ]feed|active|passive)\\b'
+
+Antenna_PCV:
+  aliases:
+    - "Phase center"
+    - "Phase center variation"
+    - "PCV"
+    - "PCO"
+  label_patterns:
+    - '(?i)\\b(Phase center|Phase center variation|PCV|PCO|Phase ?centre)\\b'
+  value_patterns:
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*mm|[+-]?[0-9]+(?:\\.[0-9]+)?\\s*mm)'
+
+Antenna_Gain:
+  aliases:
+    - "Antenna gain"
+    - "Gain (dBi)"
+    - "Antenna efficiency"
+  label_patterns:
+    - '(?i)\\b(Antenna gain|Gain\\s*\\(dBi\\)|Antenna efficiency|Gain)\\b'
+  value_patterns:
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*dBi|[0-9]+\\s*%)'
+
+Multipath_Mitigation:
+  aliases:
+    - "Multipath mitigation"
+    - "APME"
+    - "Multipath estimator"
+  label_patterns:
+    - '(?i)\\b(Multipath mitigation|APME|Multipath estimator|Multipath rejection)\\b'
+  value_patterns:
+    - '(?i)\\b(APME|multipath|a posteriori multipath estimator)\\b'
+
+Interference_Mitigation:
+  aliases:
+    - "Anti-jamming"
+    - "Anti-spoofing"
+    - "AIM"
+    - "Interference mitigation"
+    - "Spectrum analyser"
+  label_patterns:
+    - '(?i)\\b(Ant?i-?jamm|Anti-?spoof|AIM|Interference mitigat|Spectrum analys)\\b'
+  value_patterns:
+    - '(?i)\\b(AIM\\+|AIM|anti-jamming|anti-spoofing|interference monitoring)\\b'
+
+Integrity:
+  aliases:
+    - "RAIM"
+    - "Receiver Autonomous Integrity Monitoring"
+    - "Integrity monitoring"
+  label_patterns:
+    - '(?i)\\b(RAIM|Receiver Autonomous Integrity Monitoring|Integrity monitoring)\\b'
+  value_patterns:
+    - '(?i)\\b(RAIM|integrity|fault detection)\\b'
+
+GNSS_Features:
+  aliases:
+    - "All-in-view"
+    - "Multi-frequency"
+    - "Triple-frequency"
+    - "Dual-frequency"
+    - "Multi-constellation"
+  label_patterns:
+    - '(?i)\\b(All-?in-?view|Multi[- ]frequency|Triple[- ]frequency|Dual[- ]frequency|Multi[- ]constellation)\\b'
+  value_patterns:
+    - '(?i)\\b(all-in-view|multi[- ]frequency|triple[- ]frequency|dual[- ]frequency|multi[- ]constellation)\\b'
+
+Heading_Baseline:
+  aliases:
+    - "Antenna separation"
+    - "Baseline"
+    - "Antenna separation (m)"
+  label_patterns:
+    - '(?i)\\b(Antenna separation|Baseline|Antenna separation \\(m\\)|heading baseline)\\b'
+  value_patterns:
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*m|[0-9]+\\s*m)'
+
+Heading_Init_Time:
+  aliases:
+    - "Initialization"
+    - "Initialisation"
+    - "Time to initialize"
+    - "Time to first fix"
+  label_patterns:
+    - '(?i)\\b(Initialization|Initialisation|Time to initialize|Time to first fix|Initialisation time)\\b'
+  value_patterns:
+    - '(?i)([0-9]+(?:\\.[0-9]+)?\\s*s|[0-9]+\\s*s|<\\s*[0-9]+\\s*s)'
+
+Dead_Reckoning:
+  aliases:
+    - "Dead reckoning"
+    - "DR"
+    - "Dead-reckoning accuracy"
+    - "DR positioning"
+  label_patterns:
+    - '(?i)\\b(Dead[- ]?reckon|DR\\b|Dead\\-reckoning|DR positioning)\\b'
+  value_patterns:
+    - '(?i)(dead[- ]?reckon|DR|dead[- ]reckoning|duration|horizontal\\s*\\(|vertical\\s*\\()'
+
+Drift_Holdover:
+  aliases:
+    - "Holdover"
+    - "Time holdover"
+    - "Clock holdover"
+    - "Timing holdover"
+  label_patterns:
+    - '(?i)\\b(Holdover|Time holdover|Clock holdover|Timing holdover)\\b'
+  value_patterns:
+    - '(?i)([0-9]+\\s*s|[0-9]+\\s*min|[0-9]+\\s*h|\\bholdover\\b)'
+
+Use_Cases:
+  aliases:
+    - "Typical use"
+    - "Applications"
+    - "Use cases"
+    - "Recommended for"
+  label_patterns:
+    - '(?i)\\b(Typical use|Applications|Use cases|Recommended for|Target applications)\\b'
+  value_patterns:
+    - '(?i)\\b(Survey|Machine control|Precision agriculture|UAV|Marine|Timing|CORS|Robotics|Logistics|Mining|Automation)\\b'
+
+Warranty:
+  aliases:
+    - "Warranty"
+    - "Guarantee"
+    - "Support"
+  label_patterns:
+    - '(?i)\\b(Warranty|Guarantee|Support|Service)\\b'
+  value_patterns:
+    - '(?i)([0-9]+\\s*year|[0-9]+\\s*years|Standard warranty)'
+
+Certifications:
+  aliases:
+    - "Certification"
+    - "CE"
+    - "FCC"
+    - "RoHS"
+    - "WEEE"
+    - "MIL-STD"
+    - "IEC"
+  label_patterns:
+    - '(?i)\\b(Certif|CE|FCC|RoHS|WEEE|MIL-STD|IEC|ISO)\\b'
+  value_patterns:
+    - '(?i)\\b(CE|FCC|RoHS|WEEE|MIL-STD-\\d+|IEC \\d+|ISO \\d+)\\b'
+
+Environmental:
+  aliases:
+    - "Humidity"
+    - "Shock"
+    - "Vibration"
+    - "Solar radiation"
+    - "Operating altitude"
+  label_patterns:
+    - '(?i)\\b(Humidity|Shock|Vibration|Solar radiation|Operating altitude|Humidity range)\\b'
+  value_patterns:
+    - '(?i)(\\d+%\\s*RH|[0-9]+g|MIL-STD|ISO|[0-9]+m|[0-9]+\\s*dB)'
+
+Logging:
+  aliases:
+    - "Logging"
+    - "Log"
+    - "Data logging"
+    - "FTP server"
+  label_patterns:
+    - '(?i)\\b(Logging|Data logging|Log(|ging) server|FTP server|HTTP API|FTP|FTP server)\\b'
+  value_patterns:
+    - '(?i)\\b(FTP|HTTP|FTP server|FTP client|FTP upload|FTP server|FTP://)\\b'
+
+Cellular:
+  aliases:
+    - "Cellular"
+    - "Integrated cellular"
+    - "LTE"
+    - "4G"
+    - "3G"
+  label_patterns:
+    - '(?i)\\b(Cellular|Integrated cellular|LTE|4G|3G|GPRS)\\b'
+  value_patterns:
+    - '(?i)\\b(2G|3G|4G|LTE|5G|EDGE|GPRS)\\b'
+
+Wifi:
+  aliases:
+    - "Wi-Fi"
+    - "Wireless"
+    - "802.11"
+  label_patterns:
+    - '(?i)\\b(Wi-?Fi|Wireless|802\\.?11)\\b'
+  value_patterns:
+    - '(?i)\\b(802\\.11|Wi-?Fi|SSID|WPA2|WEP|80211)\\b'
+
+Security:
+  aliases:
+    - "Authentication"
+    - "HTTPS"
+    - "TLS"
+  label_patterns:
+    - '(?i)\\b(Authentication|HTTPS|TLS|User accounts|Access control)\\b'
+  value_patterns:
+    - '(?i)\\b(HTTPS|TLS|OAuth|LDAP|User accounts)\\b'
+
+Firmware_Options:
+  aliases:
+    - "Option"
+    - "Variant"
+    - "Pro"
+    - "Pro+"
+    - "ProBase"
+    - "License"
+    - "Feature key"
+  label_patterns:
+    - '(?i)\\b(Option(s)?|Variant|Pro\\+?|ProBase|License|Feature key|Optional feature)\\b'
+  value_patterns:
+    - '(?i)\\b(Pro\\+|ProBase|Pro|Option|Licensed feature)\\b'
+
+PPP_SSR_Related:
+  aliases:
+    - "PPP"
+    - "SSR"
+    - "PPP convergence"
+    - "Convergence time"
+  label_patterns:
+    - '(?i)\\b(PPP|SSR|Convergence time|PPP convergence|PPP-RTK)\\b'
+  value_patterns:
+    - '(?i)(convergence\\s*time[:\\s]*[0-9]+\\s*s|PPP|SSR|PPP-RTK)'
+
+Vendor_Features:
+  aliases:
+    - "LOCK+"
+    - "APME+"
+    - "IONO+"
+    - "AIM+"
+  label_patterns:
+    - '(?i)\\b(LOCK\\+|APME\\+|IONO\\+|AIM\\+)\\b'
+  value_patterns:
+    - '(?i)\\b(LOCK\\+|APME\\+|IONO\\+|AIM\\+)\\b'
+
+Raw_Measurements:
+  aliases:
+    - "Raw data"
+    - "Raw measurements"
+    - "Carrier phase"
+    - "Pseudorange"
+  label_patterns:
+    - '(?i)\\b(Raw data|Raw measurements|Carrier phase|Pseudorange|Observation output)\\b'
+  value_patterns:
+    - '(?i)\\b(raw|carrier phase|pseudorange|obs|observation)\\b'
+
+RTK_Server:
+  aliases:
+    - "RTK server"
+    - "Caster"
+    - "NTRIP caster"
+  label_patterns:
+    - '(?i)\\b(RTK server|Caster|NTRIP caster|NTRIP server)\\b'
+  value_patterns:
+    - '(?i)\\b(NTRIP|Caster|Server|RTK server)\\b'
+
+Base_Functionality:
+  aliases:
+    - "Base station"
+    - "Base"
+    - "Permanent installation"
+    - "CORS"
+  label_patterns:
+    - '(?i)\\b(Base station|Base|Permanent installation|CORS|ProBase)\\b'
+  value_patterns:
+    - '(?i)\\b(Base station|CORS|Permanent installation|ProBase)\\b'
+
+File_Names_and_Metadata:
+  aliases:
+    - "Filename"
+    - "File"
+    - "Document"
+    - "Datasheet"
+  label_patterns:
+    - '(?i)\\b(Filename|File|Document|Datasheet)\\b'
+  value_patterns:
+    - '(?i)\\b([A-Za-z0-9_\\-\\.]+\\.pdf)\\b'
+
+Processing_Metrics:
+  aliases:
+    - "Confidence"
+    - "Confidence score"
+    - "Extraction method"
+  label_patterns:
+    - '(?i)\\b(Confidence|Confidence score|Extraction method|Extraction notes)\\b'
+  value_patterns:
+    - '(?i)([0-9]{1,3}%|[0-9]{1,3})'

@@ -1,0 +1,64 @@
+constellation_parser — extraction & normalization rules (map L1/L2/E1/E5/B1/B2 text into standardized constellation lists)
+
+
+Label detection
+
+Match aliases: Constellations, GNSS signals, Signals tracked, Bands, Frequencies, Supported constellations, Nav systems.
+
+Prefer header blocks GNSS SIGNALS, SUPPORTED CONSTELLATIONS, or first spec table.
+
+Candidate block selection
+
+Capture nearby list or comma-separated tokens often on one line or vertical list.
+
+Also capture adjacent band lists like GPS: L1/L2/L5 and Galileo: E1/E5a/E5b.
+
+Tokenization
+
+Tokenize by delimiters , ; / | and by line breaks within the bounding box.
+
+Normalize punctuation and whitespace.
+
+Extract both constellation names and band tokens (L1,L2,L5,E1,E5,B1,B2).
+
+Unit recognition & canonical names
+
+Canonical constellation names: GPS, GLONASS, Galileo, BeiDou, QZSS, NavIC (IRNSS), SBAS (EGNOS/WAAS/GAGAN/MSAS/SDCM).
+
+Canonical band token mapping: e.g. L1, L2, L5, E1, E5a, E5b, B1, B2. Normalize L1C/A, L1C → L1.
+
+Parsing & normalization logic
+
+Produce structured output: comma-separated constellations optionally followed by bands in parentheses. Example: GPS (L1/L2/L5); Galileo (E1/E5a/E5b); BeiDou (B1/B2).
+
+If only bands listed without explicit constellation but band prefixes E/L/B present, infer constellation by band letter: E → Galileo, L → GPS/GLONASS/QZSS depending on context; if ambiguous, list bands separately and flag ambiguity.
+
+Capture SBAS as SBAS (EGNOS/WAAS/GAGAN/MSAS/SDCM) if named.
+
+Ambiguity resolution
+
+If a band token L1 appears without constellation and multiple constellations use L1, prefer mapping to GPS unless context indicates otherwise. Log alternative interpretations.
+
+If conflicting band lists appear (e.g., GPS L1/L5 and Galileo L1), accept both as presented.
+
+Confidence scoring
+
+High: explicit constellation names and associated band tokens.
+
+Medium: constellation names present but bands missing or partial.
+
+Low: only band tokens without constellation context; flag for review.
+
+Fallback & logging
+
+If only a paragraph describes multi-frequency multi-constellation all-in-view, output All-in-view, multi-frequency, multi-constellation and list typical constellations in Notes if found elsewhere.
+
+Log raw block, parsed constellations, bands, confidence.
+
+Examples
+
+GPS: L1/L2/L5; Galileo: E1/E5a/E5b; BeiDou: B1/B2 → GPS (L1/L2/L5); Galileo (E1/E5a/E5b); BeiDou (B1/B2) (high).
+
+All-in-view GNSS multi-frequency tracking → All-in-view; multi-frequency (medium).
+
+L1/L2/L5 (no constellation) → Bands: L1/L2/L5; Notes: constellation ambiguous (low).

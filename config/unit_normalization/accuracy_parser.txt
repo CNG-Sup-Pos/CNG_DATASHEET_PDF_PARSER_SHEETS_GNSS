@@ -1,0 +1,49 @@
+accuracy_parser — extraction & normalization rules
+
+Label detection
+
+Locate RTK Accuracy, Horizontal accuracy, RTK performance labels. Use fuzzy matching.
+
+Candidate value selection
+
+Search same line right side, next line, or within page blocks labeled Performance or PERFORMANCE.
+
+Capture expressions like 0.6 cm + 0.5 ppm, Horizontal 0.6 cm, or grouped Horizontal / Vertical: 0.6 cm / 1 cm.
+
+Tokenization
+
+Use regex to capture (<number> <unit>)( + <number> ppm)? patterns for both H and V.
+
+Accept units: cm, m, or just numeric (assume cm).
+
+Normalization
+
+Preserve + <ppm> if present.
+
+If both Horizontal and Vertical captured separately, format as H: {H_acc} (+{H_ppm} ppm) ; V: {V_acc} (+{V_ppm} ppm).
+
+If single value only, put it in H and V with Notes: single-value.
+
+Unit unification
+
+Convert m to cm if necessary (1 m = 100 cm) for consistent display.
+
+Edge cases
+
+If values expressed as ranges (e.g., 0.5–1 cm), record as-is and flag reduced confidence.
+
+If multiple candidate accuracy numbers exist, pick the one nearest the RTK label spatially.
+
+Confidence scoring
+
+High if cm present and + ppm parsed properly.
+
+Medium if only a single number with implied unit.
+
+Low if ambiguous tokens or multiple candidate numbers without labels.
+
+Fallback & logging
+
+If no explicit accuracy found, search document-wide for the most common cm token near RTK or RTK performance.
+
+Log source string and page number.

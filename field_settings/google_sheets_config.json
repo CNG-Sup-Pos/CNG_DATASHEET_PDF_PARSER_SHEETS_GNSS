@@ -1,0 +1,352 @@
+{
+  "google_sheets_config_version": "1.0",
+  "description": "Google Sheets API integration configuration for GNSS parser data management",
+  "authentication": {
+    "service_account": {
+      "type": "service_account",
+      "project_id": "gnss-parser-project",
+      "private_key_id": "[REPLACE_WITH_ACTUAL_KEY_ID]",
+      "private_key": "[REPLACE_WITH_ACTUAL_PRIVATE_KEY]",
+      "client_email": "[REPLACE_WITH_SERVICE_ACCOUNT_EMAIL]",
+      "client_id": "[REPLACE_WITH_CLIENT_ID]",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://oauth2.googleapis.com/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "[REPLACE_WITH_CERT_URL]"
+    },
+    "scopes": [
+      "https://www.googleapis.com/auth/spreadsheets",
+      "https://www.googleapis.com/auth/drive.readonly"
+    ],
+    "credential_file_path": "config/service-account-key.json"
+  },
+  "target_sheets": {
+    "primary_data_sheet": {
+      "spreadsheet_id": "1DKX4jnhUlOvNDPoH0n_Xgu3oJEkRNtSw7EVU8GW1wcM",
+      "sheet_name": "GNSS Parser Data",
+      "write_range": "A:T",
+      "header_row": 1,
+      "data_start_row": 2,
+      "purpose": "Main storage for extracted GNSS device specifications"
+    },
+    "processing_progress_sheet": {
+      "spreadsheet_id": "1DKX4jnhUlOvNDPoH0n_Xgu3oJEkRNtSw7EVU8GW1wcM",
+      "sheet_name": "Processing Progress",
+      "write_range": "A:J",
+      "header_row": 1,
+      "data_start_row": 2,
+      "purpose": "Real-time batch processing status tracking"
+    },
+    "error_log_sheet": {
+      "spreadsheet_id": "1DKX4jnhUlOvNDPoH0n_Xgu3oJEkRNtSw7EVU8GW1wcM",
+      "sheet_name": "Error Log",
+      "write_range": "A:H",
+      "header_row": 1,
+      "data_start_row": 2,
+      "purpose": "Detailed error tracking and resolution status"
+    },
+    "manual_review_queue": {
+      "spreadsheet_id": "1DKX4jnhUlOvNDPoH0n_Xgu3oJEkRNtSw7EVU8GW1wcM",
+      "sheet_name": "Manual Review",
+      "write_range": "A:L",
+      "header_row": 1,
+      "data_start_row": 2,
+      "purpose": "Queue for low-confidence extractions requiring human review"
+    }
+  },
+  "source_monitoring": {
+    "google_drive_folder": {
+      "folder_id": "1pmuRcPnlDns-iW_7kHxWVUAZW9xzGnpP",
+      "folder_name": "GNSS PDF Input",
+      "monitoring_enabled": true,
+      "scan_frequency_minutes": 15,
+      "file_types": ["pdf"],
+      "max_file_size_mb": 50,
+      "recursive_scan": false
+    },
+    "file_tracking": {
+      "processed_files_log": "processed_files.json",
+      "track_modification_times": true,
+      "avoid_reprocessing": true,
+      "retention_days": 30
+    }
+  },
+  "column_definitions": {
+    "primary_data_columns": {
+      "A": {
+        "field_name": "file_name",
+        "display_name": "File Name",
+        "data_type": "text",
+        "width": 200,
+        "format": "filename.pdf"
+      },
+      "B": {
+        "field_name": "processing_date",
+        "display_name": "Processing Date",
+        "data_type": "datetime",
+        "width": 120,
+        "format": "yyyy-mm-dd hh:mm:ss"
+      },
+      "C": {
+        "field_name": "dimensions",
+        "display_name": "Dimensions",
+        "data_type": "text",
+        "width": 120,
+        "format": "L×W×H mm"
+      },
+      "D": {
+        "field_name": "weight",
+        "display_name": "Weight",
+        "data_type": "text",
+        "width": 80,
+        "format": "value g"
+      },
+      "E": {
+        "field_name": "operating_temperature",
+        "display_name": "Operating Temp",
+        "data_type": "text",
+        "width": 120,
+        "format": "min to max°C"
+      },
+      "F": {
+        "field_name": "storage_temperature",
+        "display_name": "Storage Temp",
+        "data_type": "text",
+        "width": 120,
+        "format": "min to max°C"
+      },
+      "G": {
+        "field_name": "input_voltage",
+        "display_name": "Input Voltage",
+        "data_type": "text",
+        "width": 100,
+        "format": "min–max VDC"
+      },
+      "H": {
+        "field_name": "power_consumption",
+        "display_name": "Power",
+        "data_type": "text",
+        "width": 80,
+        "format": "value W"
+      },
+      "I": {
+        "field_name": "imu",
+        "display_name": "IMU",
+        "data_type": "text",
+        "width": 150,
+        "format": "specifications"
+      },
+      "J": {
+        "field_name": "accuracy",
+        "display_name": "Accuracy",
+        "data_type": "text",
+        "width": 120,
+        "format": "cm + ppm"
+      },
+      "K": {
+        "field_name": "latency",
+        "display_name": "Latency",
+        "data_type": "text",
+        "width": 80,
+        "format": "ms or Hz"
+      },
+      "L": {
+        "field_name": "frequency",
+        "display_name": "Frequency",
+        "data_type": "text",
+        "width": 150,
+        "format": "frequency list"
+      },
+      "M": {
+        "field_name": "ip_rating",
+        "display_name": "IP Rating",
+        "data_type": "text",
+        "width": 80,
+        "format": "IPXX"
+      },
+      "N": {
+        "field_name": "channels",
+        "display_name": "Channels",
+        "data_type": "text",
+        "width": 80,
+        "format": "number"
+      },
+      "O": {
+        "field_name": "constellations",
+        "display_name": "Constellations",
+        "data_type": "text",
+        "width": 150,
+        "format": "constellation list"
+      },
+      "P": {
+        "field_name": "interfaces",
+        "display_name": "Interfaces",
+        "data_type": "text",
+        "width": 150,
+        "format": "interface list"
+      },
+      "Q": {
+        "field_name": "formats",
+        "display_name": "Formats",
+        "data_type": "text",
+        "width": 120,
+        "format": "format list"
+      },
+      "R": {
+        "field_name": "warranty",
+        "display_name": "Warranty",
+        "data_type": "text",
+        "width": 100,
+        "format": "duration terms"
+      },
+      "S": {
+        "field_name": "confidence_score",
+        "display_name": "Confidence",
+        "data_type": "number",
+        "width": 80,
+        "format": "percentage"
+      },
+      "T": {
+        "field_name": "manual_override",
+        "display_name": "Manual Override",
+        "data_type": "text",
+        "width": 150,
+        "format": "override details"
+      }
+    }
+  },
+  "api_settings": {
+    "rate_limiting": {
+      "requests_per_100_seconds": 100,
+      "daily_quota_limit": 25000,
+      "batch_size_max": 1000,
+      "retry_exponential_backoff": true,
+      "max_retries": 3,
+      "base_retry_delay_ms": 1000
+    },
+    "connection_settings": {
+      "timeout_seconds": 30,
+      "connection_pool_size": 5,
+      "keep_alive": true,
+      "verify_ssl": true
+    },
+    "error_handling": {
+      "log_all_requests": true,
+      "log_level": "INFO",
+      "alert_on_quota_threshold": 0.9,
+      "alert_on_error_rate_threshold": 0.1
+    }
+  },
+  "formatting_rules": {
+    "header_formatting": {
+      "font_family": "Arial",
+      "font_size": 12,
+      "bold": true,
+      "background_color": "#E1F5FE",
+      "text_color": "#000000",
+      "horizontal_alignment": "CENTER",
+      "vertical_alignment": "MIDDLE",
+      "freeze_row": true
+    },
+    "data_formatting": {
+      "font_family": "Arial",
+      "font_size": 11,
+      "alternating_colors": ["#FFFFFF", "#F5F5F5"],
+      "horizontal_alignment": "LEFT",
+      "vertical_alignment": "MIDDLE",
+      "text_wrap": true,
+      "auto_resize": true
+    },
+    "conditional_formatting": {
+      "confidence_high": {
+        "condition": ">=85",
+        "background_color": "#E8F5E8",
+        "text_color": "#2E7D32"
+      },
+      "confidence_medium": {
+        "condition": ">=70",
+        "background_color": "#FFF3CD",
+        "text_color": "#856404"
+      },
+      "confidence_low": {
+        "condition": "<70",
+        "background_color": "#F8D7DA",
+        "text_color": "#721C24"
+      },
+      "manual_override": {
+        "condition": "not_empty",
+        "background_color": "#D4EDDA",
+        "text_color": "#155724",
+        "italic": true
+      }
+    }
+  },
+  "data_validation": {
+    "pre_write_validation": {
+      "required_fields": ["file_name", "processing_date"],
+      "field_length_limits": {
+        "file_name": 255,
+        "dimensions": 50,
+        "weight": 20,
+        "accuracy": 100,
+        "interfaces": 200
+      },
+      "format_validation": true,
+      "encoding_check": "UTF-8"
+    },
+    "post_write_verification": {
+      "verify_row_count": true,
+      "sample_data_readback": true,
+      "formatting_verification": true,
+      "audit_log_creation": true
+    }
+  },
+  "backup_and_recovery": {
+    "backup_settings": {
+      "create_backup_before_batch": true,
+      "backup_sheet_name_suffix": "_backup",
+      "retention_period_days": 30,
+      "automatic_cleanup": true
+    },
+    "recovery_procedures": {
+      "rollback_capability": true,
+      "point_in_time_recovery": false,
+      "manual_recovery_process": true,
+      "error_state_preservation": true
+    }
+  },
+  "monitoring_and_alerts": {
+    "performance_monitoring": {
+      "track_write_latency": true,
+      "track_success_rate": true,
+      "track_error_frequency": true,
+      "daily_summary_reports": true
+    },
+    "alert_conditions": {
+      "api_quota_threshold": 0.9,
+      "error_rate_threshold": 0.1,
+      "write_failure_consecutive": 5,
+      "authentication_failure": 1
+    },
+    "notification_settings": {
+      "email_alerts": false,
+      "log_file_alerts": true,
+      "console_alerts": true,
+      "slack_webhook": false
+    }
+  },
+  "development_settings": {
+    "test_mode": {
+      "enabled": false,
+      "test_spreadsheet_id": "TEST_SHEET_ID",
+      "test_folder_id": "TEST_FOLDER_ID",
+      "dry_run_mode": false
+    },
+    "debugging": {
+      "verbose_logging": false,
+      "log_api_responses": false,
+      "log_formatting_details": false,
+      "preserve_intermediate_data": false
+    }
+  }
+}

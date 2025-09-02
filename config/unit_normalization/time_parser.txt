@@ -1,0 +1,65 @@
+Time parser — extraction & normalization rules (TTFF, Re-acquisition, Holdover, PPS)
+
+Label detection
+
+Match Time to first fix, TTFF, Cold start, Warm start, Hot start, Re-acquisition, Reacquisition, Time precision, PPS, xPPS, Event accuracy, Holdover, Time holdover.
+
+Candidate token selection
+
+Values typically in seconds (s) or ns for PPS. Capture tokens like < 45 s, <20 s, 1 s, 5 ns, < 20 ns.
+
+Tokenization rules
+
+Normalize separators and symbols: <, less than, ~. Convert s, sec, seconds → s. Convert ns unchanged.
+
+Parsing & normalization logic
+
+TTFF: extract cold/warm/hot/re-acquisition separately:
+
+cold_start: value in seconds (e.g., <45 s → <45 s), warm_start, hot_start, reacquisition. Output structured string: Cold: <45 s; Warm: <20 s; Reacq: 1 s.
+
+PPS/time precision: capture explicit ns values: xPPS out 5 ns → PPS: 5 ns. If format < 5 ns, normalize to <5 ns.
+
+Event accuracy: capture < 20 ns etc.
+
+Holdover: capture X s, X min, X h and normalize to seconds as needed and also keep human-readable (e.g., holdover: 3600 s (1 h)).
+
+Unit conversions & canonical units
+
+Keep TTFF in seconds (s). If minutes/hours present convert to seconds and record both if desired.
+
+PPS/time precision in ns.
+
+Holdover expressed as seconds preferred; preserve original unit in Notes.
+
+Heuristics & ambiguity handling
+
+If TTFF values are ranges or approximate (<, ~), preserve operator and value.
+
+If multiple TTFF values found across pages choose the values nearest Performance or Time to first fix label.
+
+If no unit present but near label and numeric ≤ 600 assume seconds (common TTFF). If numeric > 3600 flag as suspicious.
+
+Confidence scoring
+
+High (≥90): explicit units and adjacent to label.
+
+Medium (70–89): unit present but ambiguous adjacency.
+
+Low (<70): no unit; heuristic assumption applied.
+
+Fallback & logging
+
+If PPS not found, search for PPS, 1PPS, xPPS tokens anywhere.
+
+If holdover present within timing section, record as holdover and flag for manual validation if > configured threshold.
+
+Log raw token, normalized value, page, and confidence.
+
+Examples
+
+Input: Time to first fix Cold start < 45 s Warm start < 20 s Re-acquisition avg. 1 s → Cold: <45 s; Warm: <20 s; Reacq: 1 s.
+
+Input: xPPS out 5 ns Event accuracy <20 ns → PPS: 5 ns; Event accuracy: <20 ns.
+
+Input: Holdover: 2 h → Holdover: 7200 s (2 h).

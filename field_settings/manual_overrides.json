@@ -1,0 +1,247 @@
+{
+  "override_schema_version": "1.0",
+  "description": "Manual override configuration for field-specific corrections and custom values",
+  "override_types": {
+    "field_value": {
+      "description": "Override extracted field value with manual entry",
+      "format": "Direct value replacement",
+      "validation": "Must match field format requirements"
+    },
+    "extraction_method": {
+      "description": "Override automatic extraction method",
+      "options": ["manual_entry", "pattern_override", "confidence_boost"],
+      "validation": "Must be valid extraction method"
+    },
+    "confidence_override": {
+      "description": "Manually set confidence level",
+      "range": [0, 100],
+      "validation": "Integer between 0 and 100"
+    }
+  },
+  "field_overrides": {
+    "dimensions": {
+      "enabled": true,
+      "format": "L×W×H mm",
+      "validation_pattern": "^\\d+(?:\\.\\d+)?\\s*[×x]\\s*\\d+(?:\\.\\d+)?\\s*[×x]\\s*\\d+(?:\\.\\d+)?\\s*mm$",
+      "common_overrides": [
+        "Manual measurement required",
+        "Dimensions from CAD drawing",
+        "Excluding antenna dimensions"
+      ]
+    },
+    "weight": {
+      "enabled": true,
+      "format": "Value g",
+      "validation_pattern": "^\\d+(?:\\.\\d+)?\\s*g$",
+      "common_overrides": [
+        "Without antenna weight",
+        "Shipping weight excluded",
+        "Net device weight only"
+      ]
+    },
+    "operating_temperature": {
+      "enabled": true,
+      "format": "Min to Max°C",
+      "validation_pattern": "^-?\\d+(?:\\.\\d+)?\\s*to\\s*\\+?\\d+(?:\\.\\d+)?°C$",
+      "common_overrides": [
+        "Extended temperature range",
+        "Industrial grade specifications",
+        "Automotive temperature rating"
+      ]
+    },
+    "storage_temperature": {
+      "enabled": true,
+      "format": "Min to Max°C",
+      "validation_pattern": "^-?\\d+(?:\\.\\d+)?\\s*to\\s*\\+?\\d+(?:\\.\\d+)?°C$",
+      "common_overrides": [
+        "Same as operating range",
+        "Extended storage capability",
+        "Shipping temperature limits"
+      ]
+    },
+    "input_voltage": {
+      "enabled": true,
+      "format": "Min–Max VDC",
+      "validation_pattern": "^\\d+(?:\\.\\d+)?–\\d+(?:\\.\\d+)?\\s*VDC$",
+      "common_overrides": [
+        "PoE power included",
+        "Battery operation range",
+        "External power adapter specs"
+      ]
+    },
+    "power_consumption": {
+      "enabled": true,
+      "format": "Value W",
+      "validation_pattern": "^\\d+(?:\\.\\d+)?\\s*W$",
+      "common_overrides": [
+        "Maximum power rating",
+        "Typical operation power",
+        "Low power mode consumption"
+      ]
+    },
+    "imu": {
+      "enabled": true,
+      "format": "Gyro: X, Accel: Y specifications",
+      "validation_pattern": ".*[Gg]yro.*[Aa]ccel.*",
+      "common_overrides": [
+        "IMU not available",
+        "External IMU required",
+        "Custom IMU specifications"
+      ]
+    },
+    "accuracy": {
+      "enabled": true,
+      "format": "Value cm + ppm specification",
+      "validation_pattern": "^\\d+(?:\\.\\d+)?\\s*cm.*ppm.*",
+      "common_overrides": [
+        "RTK accuracy specifications",
+        "Post-processing accuracy",
+        "Real-time accuracy only"
+      ]
+    },
+    "latency": {
+      "enabled": true,
+      "format": "Value ms or Hz",
+      "validation_pattern": "^\\d+(?:\\.\\d+)?\\s*(ms|Hz)$",
+      "common_overrides": [
+        "Update rate specification",
+        "Processing delay included",
+        "Real-time latency only"
+      ]
+    },
+    "frequency": {
+      "enabled": true,
+      "format": "Comma-separated frequency list",
+      "validation_pattern": ".*[LlGg][12345].*",
+      "common_overrides": [
+        "All GNSS frequencies",
+        "GPS L1/L2 only",
+        "Multi-constellation support"
+      ]
+    },
+    "ip_rating": {
+      "enabled": true,
+      "format": "IPXX rating",
+      "validation_pattern": "^IP\\d{2}$",
+      "common_overrides": [
+        "IP67 confirmed",
+        "Weatherproof rating",
+        "Industrial protection level"
+      ]
+    },
+    "channels": {
+      "enabled": true,
+      "format": "Number or range",
+      "validation_pattern": "^\\d+(?:-\\d+)?$",
+      "common_overrides": [
+        "All-in-view tracking",
+        "Maximum channel count",
+        "Multi-constellation channels"
+      ]
+    },
+    "constellations": {
+      "enabled": true,
+      "format": "Comma-separated constellation list",
+      "validation_pattern": ".*(GPS|GLONASS|Galileo|BeiDou).*",
+      "common_overrides": [
+        "All major constellations",
+        "GPS/GLONASS only",
+        "Multi-frequency support"
+      ]
+    },
+    "interfaces": {
+      "enabled": true,
+      "format": "Comma-separated interface list",
+      "validation_pattern": ".*(Ethernet|USB|RS232|CAN).*",
+      "common_overrides": [
+        "Standard connectivity",
+        "Industrial interfaces",
+        "Wireless options included"
+      ]
+    },
+    "formats": {
+      "enabled": true,
+      "format": "Comma-separated format list",
+      "validation_pattern": ".*(RTCM|RINEX|NMEA).*",
+      "common_overrides": [
+        "Industry standard formats",
+        "Proprietary format support",
+        "Real-time stream formats"
+      ]
+    },
+    "warranty": {
+      "enabled": true,
+      "format": "Duration and terms",
+      "validation_pattern": ".*\\d+.*year.*",
+      "common_overrides": [
+        "Extended warranty available",
+        "Standard manufacturer warranty",
+        "Custom warranty terms"
+      ]
+    },
+    "time_sync": {
+      "enabled": true,
+      "format": "Synchronization specification",
+      "validation_pattern": ".*(PPS|GPS|UTC|TAI).*",
+      "common_overrides": [
+        "GPS time reference",
+        "UTC synchronization",
+        "External time source"
+      ]
+    },
+    "measurement_types": {
+      "enabled": true,
+      "format": "Comma-separated measurement list",
+      "validation_pattern": ".*(RTK|PPP|DGPS).*",
+      "common_overrides": [
+        "All positioning modes",
+        "RTK capable",
+        "Standard GNSS only"
+      ]
+    },
+    "firmware_options": {
+      "enabled": true,
+      "format": "Available firmware variants",
+      "validation_pattern": ".*(Pro|Base|Standard).*",
+      "common_overrides": [
+        "Professional firmware",
+        "Standard configuration",
+        "Custom firmware available"
+      ]
+    }
+  },
+  "override_workflow": {
+    "manual_entry_process": [
+      "1. Identify field requiring override",
+      "2. Select override type (value, method, confidence)",
+      "3. Enter corrected value following format requirements",
+      "4. Validate against field-specific patterns",
+      "5. Set confidence level (manual entries = 100)",
+      "6. Add notes explaining override reason",
+      "7. Save override and mark for review",
+      "8. Apply override to extraction result"
+    ],
+    "validation_process": [
+      "1. Check format compliance with field requirements",
+      "2. Validate against expected value ranges",
+      "3. Cross-reference with related field values",
+      "4. Verify units and measurement consistency",
+      "5. Flag potential conflicts or inconsistencies"
+    ],
+    "approval_process": [
+      "1. Technical review of override necessity",
+      "2. Format and value validation",
+      "3. Impact assessment on related fields",
+      "4. Documentation of override reasoning",
+      "5. Final approval and application"
+    ]
+  },
+  "integration_settings": {
+    "google_sheets_column": "T",
+    "display_format": "Override: {field} = {value} (Reason: {reason})",
+    "confidence_boost": 100,
+    "audit_logging": true,
+    "approval_required": false,
+    "bulk_override_enabled": true
+  }
+}

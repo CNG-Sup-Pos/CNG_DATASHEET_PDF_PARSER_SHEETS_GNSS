@@ -1,0 +1,85 @@
+Power parser — extraction & normalization rules
+
+Label detection
+
+Match labels by fuzzy alias list: Power, Input voltage, Voltage, Power consumption, Typical power, PoE, Power over Ethernet, Battery. Use label regexes; prefer exact-line occurrences.
+
+Candidate value selection
+
+Search same line to the right, then next 1–2 lines below, then nearest right-hand column within max_label_distance_px.
+
+Accept grouped tokens containing V, VDC, VAC, W, mW, mA, A, “PoE”, “Power over Ethernet”, “Battery”.
+
+Tokenization rules
+
+Split on separators: , ; / ( ) — – to ~.
+
+Preserve tokens that include digits+unit (e.g., 9–32 VDC, 1.3 W, 150 mA).
+
+Normalize decimal commas to dots.
+
+Unit recognition & canonical units
+
+Voltage canonical: VDC (preserve VAC if present but tag).
+
+Power canonical: W.
+
+Current canonical: mA.
+
+PoE: boolean + standard (802.3af/at) token extraction if present.
+
+Battery: capture chemistry/type and capacity if present.
+
+Parsing rules (value extraction)
+
+Voltage ranges: regex for (\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)\s*(V|VDC|VAC) → normalize to min–max VDC (if VAC given keep VAC).
+
+Single voltage: (\d+(?:\.\d+)?)\s*(V|VDC|VAC) → x VDC.
+
+Power consumption: (\d+(?:\.\d+)?)\s*(W|mW) → convert mW→W if needed, format x W. If both typical and max present, capture both: typical: x W, max: y W.
+
+Current: (\d+(?:\.\d+)?)\s*(mA|A) → normalize A→mA (×1000) and output x mA.
+
+PoE detection: presence of PoE or Power over Ethernet → set PoE: true and capture spec 802.3af/at/bt if present.
+
+Normalization rules
+
+Voltage range normalized string: 9–32 VDC. Use en-dash. If unit missing but numeric range present, append VDC only if context line includes “V” elsewhere; otherwise leave unit blank and flag.
+
+Power normalized: typical: 1.3 W; max: 2.5 W or power: 1.3 W if single.
+
+Current normalized: 150 mA.
+
+If both voltage and W exist, present: 9–32 VDC, 1.3 W (typical).
+
+Keep original raw token in Notes.
+
+Edge cases & heuristics
+
+If only 5–36 found and context line includes V elsewhere, assume VDC.
+
+If PoE present but no voltage, mark PoE: yes (spec unknown).
+
+If input voltage shows two ranges separated by or choose the one matching typical receiver ranges (e.g., 5–36 V preferred over 100–240 VAC).
+
+Confidence scoring
+
+High (≥90): explicit unit(s) and clearly adjacent to power label; both voltage and W present.
+
+Medium (70–89): unit present but ambiguous adjacency; only current or only W present.
+
+Low (<70): numeric tokens without units or inconsistent units; flag in Notes.
+
+Fallback & logging
+
+If no explicit power tokens found near labels, scan entire document for V, W, mA clusters and pick token nearest Power, Input, or header. Log candidate(s) and mark low confidence.
+
+On failure, move file to failed/ or leave for manual review; record in _parser_log with page and raw string.
+
+Examples
+
+Input: Input voltage: 9 to 32 VDC → 9–32 VDC (high confidence).
+
+Input: Power consumption: GPS/GLO L1/L2 1.1 W All signals, all GNSS constellations 1.3 W Maximum 2.5 W → typical: 1.3 W; max: 2.5 W (high).
+
+Input: Antenna LNA power output: 5 VDC, 150 mA → capture as antenna_lna: 5 VDC, 150 mA.

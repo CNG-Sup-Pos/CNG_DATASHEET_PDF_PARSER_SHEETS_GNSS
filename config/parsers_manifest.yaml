@@ -1,0 +1,163 @@
+# Master parser manifest for GNSS/RTK datasheet extraction
+# Each entry defines:
+# - parser: the parser module to call
+# - aliases: common labels to match
+# - priority: extraction order (1 = highest)
+# - unit: canonical unit or data type
+# - confidence_threshold: minimum acceptable confidence (0–100)
+# - examples: normalized output examples
+
+fields:
+
+  dimensions:
+    parser: dimension_parser
+    aliases: [Dimensions, Size, Device size, Housing, Physical dimensions]
+    priority: 1
+    unit: mm (WxHxD)
+    confidence_threshold: 85
+    examples: ["235 × 146 × 14.5 mm", "235x146x14.5 mm"]
+
+  weight:
+    parser: weight_parser
+    aliases: [Weight, Mass]
+    priority: 2
+    unit: g / kg
+    confidence_threshold: 85
+    examples: ["1.2 kg", "750 g"]
+
+  operating_temperature:
+    parser: temperature_parser
+    aliases: [Operating temperature, Operating temp, Temperature range, Ambient temperature]
+    priority: 3
+    unit: °C
+    confidence_threshold: 85
+    examples: ["-40 °C to 85 °C", "0 °C to 60 °C"]
+
+  storage_temperature:
+    parser: temperature_parser
+    aliases: [Storage temperature, Storage temp]
+    priority: 4
+    unit: °C
+    confidence_threshold: 85
+    examples: ["-55 °C to 95 °C"]
+
+  input_voltage:
+    parser: voltage_parser
+    aliases: [Input voltage, Voltage range, Supply voltage, Power supply]
+    priority: 5
+    unit: VDC / VAC
+    confidence_threshold: 85
+    examples: ["9–32 VDC", "100–240 VAC (50/60 Hz)"]
+
+  power_consumption:
+    parser: power_parser
+    aliases: [Power consumption, Typical power, Max power, Consumption, Electrical power]
+    priority: 6
+    unit: W
+    confidence_threshold: 85
+    examples: ["2.5 W", "5 W typical, 7 W max"]
+
+  imu:
+    parser: imu_parser
+    aliases: [IMU, INS, Inertial measurement, Inertial sensors, AHRS]
+    priority: 7
+    unit: sensor spec
+    confidence_threshold: 80
+    examples: ["MEMS 6-axis IMU", "Tactical grade INS"]
+
+  accuracy:
+    parser: accuracy_parser
+    aliases: [Accuracy, Position accuracy, Horizontal accuracy, Vertical accuracy, RTK accuracy]
+    priority: 8
+    unit: cm / mm / ppm
+    confidence_threshold: 90
+    examples: ["RTK: 1 cm + 1 ppm (horizontal)", "SBAS: <1 m"]
+
+  latency:
+    parser: latency_parser
+    aliases: [Latency, Output latency, Data latency, Position latency]
+    priority: 9
+    unit: ms
+    confidence_threshold: 85
+    examples: ["<1 ms", "50 ms"]
+
+  frequency:
+    parser: frequency_parser
+    aliases: [Update rate, Measurement rate, Position rate, Frequency]
+    priority: 10
+    unit: Hz
+    confidence_threshold: 85
+    examples: ["100 Hz", "20 Hz"]
+
+  time_sync:
+    parser: time_parser
+    aliases: [Timing, Time sync, Time transfer, 1PPS, Pulse-per-second, Timing accuracy]
+    priority: 11
+    unit: ns / μs
+    confidence_threshold: 85
+    examples: ["20 ns RMS to UTC", "PPS: ±40 ns"]
+
+  measurement_types:
+    parser: measurement_parser
+    aliases: [Measurements, Observables, Supported measurements, Signal measurements]
+    priority: 12
+    unit: measurement list
+    confidence_threshold: 80
+    examples: ["Pseudorange, Carrier phase, Doppler"]
+
+  ip_rating:
+    parser: ip_parser
+    aliases: [IP rating, Protection, Environmental rating, Ruggedness]
+    priority: 13
+    unit: IP code
+    confidence_threshold: 90
+    examples: ["IP67", "IP69K"]
+
+  channels:
+    parser: channels_parser
+    aliases: [Channels, Tracking channels, Number of channels, Hardware channels]
+    priority: 14
+    unit: channels
+    confidence_threshold: 90
+    examples: ["544 channels", "220 tracking channels"]
+
+  constellations:
+    parser: constellation_parser
+    aliases: [Constellations, GNSS signals, Signals tracked, Supported constellations, Nav systems]
+    priority: 15
+    unit: constellation+bands
+    confidence_threshold: 85
+    examples: ["GPS (L1/L2/L5); Galileo (E1/E5a/E5b); BeiDou (B1/B2)"]
+
+  interfaces:
+    parser: interfaces_parser
+    aliases: [Interfaces, Connectivity, I/O, Ports, Communication, Connections]
+    priority: 16
+    unit: interface list
+    confidence_threshold: 85
+    examples: ["Ethernet (10/100 Mbps), USB (device), RS232 (3 ports), CAN-FD"]
+
+  formats:
+    parser: formats_parser
+    aliases: [Formats, Output formats, Input formats, Data formats, File formats]
+    priority: 17
+    unit: format list
+    confidence_threshold: 85
+    examples: ["RTCM v3.x, RINEX v3, NMEA 0183, SBF"]
+
+  warranty:
+    parser: warranty_parser
+    aliases: [Warranty, Guarantee, Service, Warranty period, Limited warranty]
+    priority: 18
+    unit: years/months
+    confidence_threshold: 80
+    examples: ["2 years return-to-base", "12 months limited"]
+
+  firmware_options:
+    parser: firmware_options_parser
+    aliases: [Options, Variants, Firmware options, Software options, Product variants, Feature key]
+    priority: 19
+    unit: options/variants list
+    confidence_threshold: 80
+    examples: ["Pro+, ProBase, IMU option, L-band option"]
+

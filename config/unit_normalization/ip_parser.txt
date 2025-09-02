@@ -1,0 +1,65 @@
+ip_parser — extraction & normalization rules (IPxx, IPxxK variants)
+
+Label detection
+
+Match aliases: Ingress protection, IP rating, IP, Ingress Prot..
+
+Prefer ENVIRONMENTAL or PHYSICAL spec blocks.
+
+Candidate value selection
+
+Same-line to right, next 1–2 lines below, or nearest right-hand column.
+
+Accept tokens like IP68, IP69K, IP 68, IP6K9, IP66/67 (slashed), IP67/IP69K.
+
+Tokenization
+
+Normalize spaces and casing: remove spaces between IP and digits: IP 68 → IP68.
+
+Recognize IP followed by digits and optional K (case-insensitive). Accept IP6X where X is digits.
+
+Unit recognition & canonical format
+
+Canonical format: IP{digits}{optional K} uppercase, no spaces (e.g., IP69K).
+
+For slashed forms like IP66/67, preserve as IP66/IP67 or prefer the higher protection grade depending on config.
+
+Parsing & normalization
+
+If single rating IP68 → output IP68.
+
+If multiple or compound ratings (IP66/67), output as IP66/IP67 and log as composite.
+
+If IP69K present normalize exactly IP69K.
+
+Ambiguity resolution
+
+If both Ingress protection: IP69K (with mated connectors) appear, capture IP69K and capture contextual note (with mated connectors) in Notes.
+
+If only Ingress word present but no numeric token, search for IP tokens elsewhere in doc.
+
+Confidence scoring
+
+High: explicit IP token with digits ± K and adjacency.
+
+Medium: Ingress protection label with numerical token on different line but within max_label_distance_px.
+
+Low: Ingress mentioned with no IP digits; require manual review.
+
+Edge cases & heuristics
+
+Some vendors list environmental ratings like Ingress protection IP69K (ISO20653). Capture IP69K and optionally schema/source in Notes.
+
+If nonstandard tokens like IP6X appear, preserve raw token and flag for review.
+
+Fallback & logging
+
+If no IP token found in PHYSICAL block, scan for IP globally and choose highest IP number found near mechanical/environmental text. Log source and confidence.
+
+Examples
+
+Ingress protection: IP69K (ISO20653) with mated connectors → IP69K; Notes: ISO20653, requires mated connectors.
+
+IP 68 → IP68.
+
+IP66/67 → IP66/IP67 (composite).

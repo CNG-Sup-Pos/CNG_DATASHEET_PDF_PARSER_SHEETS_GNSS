@@ -1,0 +1,41 @@
+frequency_parser — extraction & normalization rules
+
+Label detection
+
+Match Update rate, Maximum update rate, Position update rate, Position and attitude rate.
+
+Candidate value selection
+
+Look for numeric tokens with Hz immediately to right or below label. Also accept tokens like Position 100 Hz or Position and attitude 50/100 Hz.
+
+Token parsing
+
+Normalize tokens like 50/100 Hz or 100 Hz pos / 50 Hz att into two values: position_rate and attitude_rate.
+
+Accept textual forms 100 Hz or 100Hz or 100 Hz (position).
+
+Normalization
+
+Format as pos: {pos_rate} Hz and if present att: {att_rate} Hz then output combined string like 100 Hz or 100 Hz / 50 Hz (pos/att).
+
+Convert decimal rates to integer where sensible.
+
+Unit handling
+
+Expect Hz. If pps used, convert if mapping defined in config; otherwise record raw and flag.
+
+Confidence scoring
+
+High if Hz explicit and clearly associated with label.
+
+Medium if Hz present but ambiguous which rate (pos vs att).
+
+Low if no Hz and parser must infer from context.
+
+Fallback & logging
+
+If no Hz found, look for phrases like updates per second.
+
+If multiple Hz numbers present across doc, prefer the one nearest the label spatially.
+
+Log alternatives.

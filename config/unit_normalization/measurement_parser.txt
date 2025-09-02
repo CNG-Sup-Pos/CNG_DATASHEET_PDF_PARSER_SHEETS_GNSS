@@ -1,0 +1,93 @@
+measurement_parser — extraction & normalization rules (pseudorange, carrier phase, C/N0, tracking thresholds)
+
+Label detection
+
+Match aliases: Measurement precision, Pseudorange precision, Carrier phase precision, C/N0 threshold, Tracking performance, Acquisition threshold.
+
+Use fuzzy matching and label regexes; prefer block headers like PERFORMANCE, TRACKING PERFORMANCE.
+
+Candidate block selection
+
+When a label is found capture its surrounding block (same bounding box or ±3 lines).
+
+If label absent, scan for units and keywords cm, mm, m, dB-Hz, C/N0, tracking, acquisition in technical/performance sections.
+
+Tokenization
+
+Extract numeric+unit tokens: patterns for \d+(\.\d+)?\s*(cm|mm|m), \d+(\.\d+)?\s*dB-?Hz, C\/N0\s*[:\s]*\d+, \d+\s*ns (timing may appear here).
+
+Accept combined forms like Pseudorange 2.5 m, Carrier phase 0.01 m, C/N0 threshold 20 dB-Hz.
+
+Unit recognition & canonical units
+
+Pseudorange/carrier phase: canonical units m or cm. Prefer cm when values < 1 m.
+
+C/N0: canonical dB-Hz.
+
+Convert mm→cm or mm→m as configured by normalization rules; default to cm for display of small precisions.
+
+Parsing & normalization logic
+
+Identify and map categories:
+
+pseudorange_precision: largest token with m, cm, or mm near label pseudorange.
+
+carrier_phase_precision: token with m, cm, or mm near label carrier phase.
+
+C/N0: numeric token with dB-Hz or C/N0 prefix.
+
+tracking_thresholds: text that pairs Tracking or Acquisition with dB-Hz.
+
+Normalize:
+
+Pseudorange: {value} m or {value} cm (choose unit that results in value ≥1 where reasonable; config parameter).
+
+Carrier phase: same rule.
+
+C/N0: {value} dB-Hz.
+
+Composite output string: Pseudorange: X cm; Carrier phase: Y cm; C/N0: Z dB-Hz.
+
+Ambiguity resolution
+
+If multiple numeric candidates of same unit type exist:
+
+Prefer the one spatially closest to the label.
+
+Prefer values in a PERFORMANCE or SPECIFICATIONS table over scattered inline values.
+
+If still ambiguous pick the most common unit expected for that field (C/N0 → dB-Hz).
+
+Log alternates in Notes with their positions and confidence scores.
+
+Confidence scoring
+
+High: explicit unit and label adjacency with single candidate.
+
+Medium: explicit unit but multiple nearby candidates or label weak.
+
+Low: unit missing; mapping based on heuristics (e.g., small numeric near performance block assumed cm).
+
+Edge cases & heuristics
+
+Values given as ranges (0.5–1.0 m) are preserved and normalized (choose narrower format or keep range).
+
+Values given as thresholds (Tracking: 20 dB-Hz) treated as tracking_threshold.
+
+If values lack units but are followed by common GNSS tokens (e.g., C/N0 28), infer unit dB-Hz.
+
+If conflicting units present in same block, capture raw string and flag low confidence.
+
+Fallback & logging
+
+If field cannot be found, search document-wide for unit tokens and pick nearest to PERFORMANCE headings.
+
+Record every decision to _parser_log: filename, page, field, extracted_text, method, confidence.
+
+Examples
+
+Pseudorange precision 2.5 m → Pseudorange: 2.5 m.
+
+Carrier phase precision 0.01 m → Carrier phase: 1.0 cm (normalized as cm if configured).
+
+Tracking performance C/N0 threshold 20 dB-Hz → C/N0: 20 dB-Hz; Tracking threshold: 20 dB-Hz.
