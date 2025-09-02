@@ -11,9 +11,11 @@
 3. ✅ Create validators.gs - Validation and confidence scoring
 4. ✅ Create formatters.gs - Google Sheets output formatting
 5. ✅ Create main.gs - PDF processing workflow and UI menu
+6. ✅ Fix JavaScript regex syntax - Convert (?i) to /i flags
 
 ## Commits
 - ✅ feat: complete GNSS PDF parser Google Apps Script implementation (note#1) - commit 48af62b
+- ✅ fix: convert JavaScript regex from (?i) syntax to /i flag (note#2) - commit 00dde11
 
 ## Files Created
 - ✅ apps-script/config.gs (Configuration and pattern loading)
@@ -30,6 +32,7 @@
 - ✅ Validation and confidence scoring system complete
 - ✅ Google Sheets integration with color coding
 - ✅ End-to-end PDF processing workflow with UI menu
+- ✅ JavaScript regex syntax validated - all patterns use proper /i flags
 
 ## Implementation Summary
 Complete Google Apps Script solution with:
