@@ -604,9 +604,15 @@ class FieldExtractors {
    */
   normalizeDimensions(raw) {
     // Support multiple separators: x, ×, *, ·, space
-    // Standard pattern with explicit separators
-    const separatorPattern = /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[x×\*·]+\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[x×\*·]+\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?/i;
-    let match = raw.match(separatorPattern);
+    // Enhanced pattern for "274 mm x 185 mm x 17 mm" format
+    const mmSpacedPattern = /(\d+(?:[.,]\d+)?)\s*mm\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*mm\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*mm/i;
+    let match = raw.match(mmSpacedPattern);
+    
+    if (!match) {
+      // Standard pattern with explicit separators
+      const separatorPattern = /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[x×\*·]+\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[x×\*·]+\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?/i;
+      match = raw.match(separatorPattern);
+    }
     
     if (!match) {
       // Enhanced patterns for space-separated: "135mm 102mm 47mm" or "135 102 47"

@@ -379,9 +379,9 @@ class ParserConfig {
           required: true,
           formatPattern: /^\d+(?:\.\d+)?\s*[×x]\s*\d+(?:\.\d+)?\s*[×x]\s*\d+(?:\.\d+)?\s*mm$/,
           valueRanges: {
-            lengthMm: {min: 10, max: 500},
-            widthMm: {min: 10, max: 500},
-            heightMm: {min: 5, max: 200}
+            lengthMm: {min: 1, max: 1000}, // More flexible range
+            widthMm: {min: 1, max: 1000},  // More flexible range
+            heightMm: {min: 1, max: 500}   // More flexible range
           }
         },
         
@@ -389,16 +389,16 @@ class ParserConfig {
           required: true,
           formatPattern: /^\d+(?:\.\d+)?\s*g$/,
           valueRanges: {
-            weightG: {min: 5, max: 5000}
+            weightG: {min: 1, max: 10000} // More flexible range
           }
         },
         
         operating_temperature: {
           required: true,
-          formatPattern: /^-?\d+(?:\.\d+)?\s*to\s*\+?\d+(?:\.\d+)?°C$/,
+          formatPattern: /^-?\d+(?:\.\d+)?\s*°C\s*to\s*-?\d+(?:\.\d+)?\s*°C$/,  // Fixed pattern
           valueRanges: {
-            minTempC: {min: -60, max: 10},
-            maxTempC: {min: 40, max: 100}
+            minTempC: {min: -80, max: 20}, // More flexible range
+            maxTempC: {min: 20, max: 150}  // More flexible range
           }
         },
         
@@ -406,8 +406,8 @@ class ParserConfig {
           required: true,
           formatPattern: /^\d+(?:\.\d+)?\s*cm(?:\s*\+\s*\d+(?:\.\d+)?\s*ppm)?$/,
           valueRanges: {
-            horizontalAccuracyCm: {min: 0.1, max: 500},
-            verticalAccuracyCm: {min: 0.1, max: 1000}
+            horizontalAccuracyCm: {min: 0.01, max: 1000}, // More flexible range
+            verticalAccuracyCm: {min: 0.01, max: 2000}    // More flexible range
           }
         }
       }

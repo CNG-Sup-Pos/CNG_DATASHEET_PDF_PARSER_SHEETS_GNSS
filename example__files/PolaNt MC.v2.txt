@@ -1,0 +1,100 @@
+PolaNt* MC.v2
+High-precision multi-frequency GNSS antenna
+
+Mining
+
+Construction
+Precision
+Agriculture
+
+Automation
+Antennas
+
+The PolaNt* MC.v2 is a lightweight, sturdy, high
+precision, multi-frequency, multi-constellation
+antenna. Built into a rugged and environmentally
+sealed housing with aluminium bottom plate, it
+is ideal for in physically demanding applications
+such as agriculture, construction and mining.
+
+The PolaNt* MC.v2 allows for the reception of
+augmentation services distributed via L-band, making
+it particularly suited for use in machine control
+application in combination with Septentrio AsteRx
+products.
+
+KEY FEATURES
+ Multi-constellation, multi-frequency GPS,
+Galileo, GLONASS and BeiDou signals
+capable
+ Reception of Inmarsat L-Band signals
+compatible with Fugro correction services
+ Ruggedized design
+
+30°
+
+44,4 mm / 1.75 in
+
+62,7 mm / 2.47 in
+
+PolaNt* MC.v2
+
+FEATURES
+Signals
+L-Band (MSS)
+GPS L1, L2, L5
+GLONASS L1, L2, L3
+Beidou B1, B2, B3
+Galileo E1, E5a, E5b, E6
+SBAS L1, L5
+NavIC L5
+QZSS L1, L2, L5, L6
+Frequencies
+1539- 1615 MHz
+1164-1295 MHz
+Polarisation RHCP
+Axial Ratio 3 dB Max
+Radiation Coverage
+Zenith 6.0 dBic
+15° elevation -2.0 dBic
+10° elevation -3.0 dBic
+5° elevation -4.0 dBic
+Horizon -5.0 dBic
+Amplifier
+Gain 39 ± 2 dB
+Noise Figure 2.6 dB max
+Input Voltage +3 to 15 VDC
+Current 65 m A (typ)
+Impedance 50 Ω
+VSWR ≤ 2.0:1
+Physical and Environmental
+Finish White radome with black aluminium base
+Weight ≈ 500 g / 1.1 lb
+Diameter 146 mm / 5.74 in
+Connector TNC Female
+Temperature -55° C to + 85° C
+-58° F to 185° F
+Designed to D0160D
+Certification RoHS, WEEE, CE, FCC
+
+SSNBBr 63/02/2025 • Specifications subject to change without notice. Certain features and specifications may not apply to all models. © 2025 Septentrio NV. All rights reserved.
+
+23,8 mm / 0.94 in
+
+Ø 146 mm / 5.75 in
+
+EMEA
+Greenhill Campus (HQ)
+Interleuvenlaan 15i
+3001 Leuven, Belgium
+
+Americas
+2601 Airport Drive,
+Suite 360
+Torrance, CA 90505, USA
+
+Asia-Pacific
+Shanghai, China
+Yokohama, Japan
+Seoul, Korea
+Espoo, Finland septentrio.com/contact septentrio.com

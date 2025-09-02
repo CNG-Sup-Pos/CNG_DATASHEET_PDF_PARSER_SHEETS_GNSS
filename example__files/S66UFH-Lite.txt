@@ -1,0 +1,133 @@
+S66UFH-Lite
+S66UFH-Lite is a miniaturized GNSS receiver based on the Beidou
+ground-based augmentation system and is completely
+independently developed. It is equipped with a built-in Linux
+operating system, with a variety of interface types, diverse
+communication methods, and supports large capacity data
+storage. It supports dual-antenna directional solution and
+dual-antenna independent differential output function at
+full-system and full-frequency points. It is widely used in fields
+such as automatic driving, mechanical control, and motion
+posture measurement.
+IP68
+Ca
+PWE
+DATA
+GNSS1
+LENGTH WIDTH HEIGHT WEIGHT
+135mm 102mm 47mm 470g
+RECEIVE ALL SATELLITE SIGNALS
+S66UFH-Lite has 1408 channels, integrates a high-precision positioning
+module, and supports the reception and interpretation of GNSS signals (BDS,
+GPS, GLONASS, GALILEO, QZSS and SBAS).
+RICH INTERFACES AND VARIOUS COMMUNICATION METHODS
+S66UFH-Lite provides dual antennas, Ethernet, serial port and mobile network
+interfaces for customers to choose.
+SUPPORT FRONT-END SOLUTION
+S66UFH-Lite supports the front-end calculation function, which can complete
+the static data calculation inside the device and upload the results to the
+cloud, which greatly reduces the requirements on the computing power of the
+cloud server.
+IP68
+Industrial design, solid magnesium alloy shell, in line with IP68 design
+requirements, safe and reliable.
+PWR
+DATA
+GNSS2
+GNSS
+ITEM
+HARDWARE SYSTEM
+OS
+GPS
+GLONASS
+BDS
+GALILEO
+SPECIFICATION
+ARM Cortex-A7 1.8GHz
+Linux
+L1C/A, L2P/L2C, L5
+L1, L2
+B11, B21, B3I, B1C*, B2b*
+E1, E5a, E5b, E6*
+L1, L2, L5
+L1C/A
+1408 channels
+QZSS
+SBAS
+Channel
+Differential Observation 10.0cm Accuracy(RMS)
+Kinematic Phase
+Observation Accuracy 1.0cm
+REMARKS
+Marked with *, it means firmware
+support is required.
+Support PPP-B2b
+Support PPP-E6
+Support SBAS
+(RMS)
+Data format
+Position Data
+Differential Data
+Data update frequency
+Receive Data Availability
+Data Integrity
+Single(RMS)
+RTK(RMS)
+Static Accuracy(RMS)
+Time Accuracy(RMS)
+Heading Accuracy(RMS)
+Serial Port
+Network port
+Network
+Communication
+(Full Netcom)
+Interface
+Storage
+RINEX, Custom
+NMEA-0183
+RTCM3.Х
+1Hz, 2Hz, 5Hz, 10Hz, 20Hz
+≥98%(Data available/Data collected)
+298% (Data collected/Data should be collected)
+Horizontal: 1.5m Vertical: 2.5m
+Horizontal: ±(8mm+1ppm)
+Vertical: ±(15mm+1ppm)
+Horizontal: ±(2.5mm+0.5ppm)
+Vertical: ±(5mm+0.5ppm)
+20ns
+0.2°/m
+Standard RS232 interface,
+Baud rate supports 1200, 2400, 4800, 9600, 19200, 38400,
+115200, 230400bps
+Standard RJ45 interface,
+10/100Mbps network adaptive
+Integrated on the 7-pin interface, support access to the
+computer to copy data directly
+LTE FDD: B1/2/3/4/5/7/8/12/13/18/19/20/25/26/28
+LTE TDD: B38/39/40/41
+WCDMA: B1/2/4/5/6/8/19
+GSM: B2/3/5/8
+PWE*1: Power supply port
+SIM*1: Standard SIM card
+DATA*1
+Ethernet*1
+GNSS*2: TNC interface 4G*1: 4G antenna port
+32GB, circular storage support multi-channel storage
+9-24V DC (12V typical)
+2W(typ)
+USB
+SYSTEM
+ELECTRICAL
+CHARACTERISTIC
+Voltage Input
+Power dissipation
+Operating Temperature -40~+85°C
+ENVIRONMENT Storage Temperature -40~+85°C
+Protection IP68
+Material
+PHYSICAL Dimension
+Weight
+Magnesium alloy main body
+135mm*102mm*47mm
+470g
+► Manufacturers may update parameters at any time, please refer to the latest product information.
