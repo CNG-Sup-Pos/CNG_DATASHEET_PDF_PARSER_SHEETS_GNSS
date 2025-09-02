@@ -1303,10 +1303,9 @@ function advancedConfigDialogHTML() {
         div.className = 'field-item';
         div.draggable = true;
         div.dataset.field = fieldKey;
-        div.innerHTML = `
-          <span class="drag-handle">≡</span>
-          <span>${index + 1}. ${fieldNames[fieldKey] || fieldKey}</span>
-        `;
+        div.innerHTML = 
+          '<span class="drag-handle">≡</span>' +
+          '<span>' + (index + 1) + '. ' + (fieldNames[fieldKey] || fieldKey) + '</span>';
         
         // Add drag event listeners
         div.addEventListener('dragstart', onDragStart);
