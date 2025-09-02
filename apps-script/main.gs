@@ -1362,7 +1362,7 @@ function advancedConfigDialogHTML() {
       items.forEach((item, index) => {
         const span = item.querySelector('span:last-child');
         const fieldName = span.textContent.replace(/^\d+\.\s*/, '');
-        span.textContent = `${index + 1}. ${fieldName}`;
+        span.textContent = (index + 1) + '. ' + fieldName;
       });
     }
     
