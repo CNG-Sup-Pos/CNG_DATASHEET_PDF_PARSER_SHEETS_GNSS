@@ -173,6 +173,11 @@ class FieldExtractors {
    */
   proximityRecovery(fieldName, pdfText, fieldConfig) {
     try {
+      // Special handling for product description
+      if (fieldName === 'product_description') {
+        return this.extractDescriptionFromDocument(pdfText, fieldConfig);
+      }
+      
       const lines = pdfText.split('\n');
       const candidates = [];
       const proximitySettings = this.getConfig().getProximitySettings();
@@ -540,6 +545,14 @@ class FieldExtractors {
         case 'IP code':
           normalizedValue = this.normalizeIPRating(candidate.raw);
           break;
+        case 'text':
+          // Handle product description specially
+          if (fieldConfig.aliases && fieldConfig.aliases.includes('Description')) {
+            normalizedValue = this.normalizeDescription(candidate.raw);
+          } else {
+            normalizedValue = this.normalizeText(candidate.raw);
+          }
+          break;
         default:
           normalizedValue = this.normalizeText(candidate.raw);
       }
@@ -841,6 +854,34 @@ class FieldExtractors {
     return raw.trim().replace(/\s+/g, ' ');
   }
 
+  /**
+   * Normalize product description - extract meaningful overview text
+   */
+  normalizeDescription(raw) {
+    // Clean up the raw description
+    let cleaned = raw.trim();
+    
+    // Remove common prefixes
+    cleaned = cleaned.replace(/^(Description|Overview|Features?):\s*/i, '');
+    
+    // Remove bullet point markers
+    cleaned = cleaned.replace(/^[•·\-\*]\s*/, '');
+    
+    // Limit length to reasonable size
+    if (cleaned.length > 200) {
+      // Find last complete sentence within 200 chars
+      const truncated = cleaned.substring(0, 200);
+      const lastSentence = truncated.lastIndexOf('.');
+      if (lastSentence > 100) {
+        cleaned = truncated.substring(0, lastSentence + 1);
+      } else {
+        cleaned = truncated + '...';
+      }
+    }
+    
+    return cleaned;
+  }
+
   // === ADAPTIVE RECOVERY HELPER METHODS ===
 
   /**
@@ -877,6 +918,16 @@ class FieldExtractors {
       case 'power_consumption':
         // Power patterns
         relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*(?:W|watts?|mA|mW)/gi);
+        break;
+        
+      case 'product_description':
+        // Description extraction patterns
+        // Look for overview paragraphs in first 1/3 of document
+        relaxedPatterns.push(/(?:overview|description|features?):\s*([^.]{50,}\.)/gi);
+        // Feature bullet points
+        relaxedPatterns.push(/[•·\-\*]\s*([^•·\-\*\n]{30,})/g);
+        // Marketing sentences
+        relaxedPatterns.push(/[A-Z][^.!?]{40,}[.!?]/g);
         break;
         
       default:
@@ -1036,12 +1087,102 @@ class FieldExtractors {
         broadPatterns.push(/(\d+(?:[.,]\d+)?)\s*[WmA]/gi);
         break;
         
+      case 'product_description':
+        // Very broad description patterns
+        // Any sentence longer than 30 characters
+        broadPatterns.push(/[A-Z][^.!?]{30,}[.!?]/g);
+        // Any line with descriptive words
+        broadPatterns.push(/.*(?:features?|capabilities?|designed?|provides?|offers?|delivers?).*[.!?]/gi);
+        break;
+        
       default:
         // Very generic numeric patterns
         broadPatterns.push(/\b(\d+(?:[.,]\d+)?)\b/gi);
     }
     
     return broadPatterns;
+  }
+
+  /**
+   * Extract product description from document using specialized logic
+   */
+  extractDescriptionFromDocument(pdfText, fieldConfig) {
+    try {
+      const lines = pdfText.split('\n');
+      const firstThird = lines.slice(0, Math.floor(lines.length / 3));
+      const candidates = [];
+      
+      // Look for overview paragraphs in first 1/3 of document
+      for (const line of firstThird) {
+        if (line.length > 100 && line.includes('.') && 
+            !line.match(/\d+\s*(mm|g|Hz|VDC|°C)/) && // Avoid technical specs
+            !line.match(/^\s*[A-Z]+\s*$/) && // Avoid headers
+            line.match(/[a-z].*[a-z]/)) { // Requires lowercase letters (descriptive text)
+          
+          candidates.push({
+            raw: line.trim(),
+            normalized: line.trim(),
+            confidence: 50,
+            context: line.substring(0, 100),
+            method: 'description_extraction',
+            matchIndex: 0
+          });
+        }
+      }
+      
+      // Fallback: Extract bullet points from features section
+      if (candidates.length === 0) {
+        const featureBullets = this.extractFeatureBullets(pdfText);
+        if (featureBullets) {
+          candidates.push({
+            raw: featureBullets,
+            normalized: featureBullets,
+            confidence: 40,
+            context: featureBullets.substring(0, 100),
+            method: 'feature_bullets',
+            matchIndex: 0
+          });
+        }
+      }
+      
+      const bestCandidate = this.selectBestCandidate(candidates, fieldConfig);
+      if (!bestCandidate) {
+        return { value: null, confidence: 0, context: '', method: 'description_extraction', rawValue: null };
+      }
+      
+      const normalized = this.normalizeValue(bestCandidate, fieldConfig);
+      return {
+        value: normalized.value,
+        confidence: Math.max(25, normalized.confidence - 10),
+        context: bestCandidate.context,
+        method: 'description_extraction',
+        rawValue: bestCandidate.raw
+      };
+    } catch (error) {
+      return { value: null, confidence: 0, context: '', method: 'description_extraction', rawValue: null, error: error.message };
+    }
+  }
+
+  /**
+   * Extract feature bullets as fallback for description
+   */
+  extractFeatureBullets(pdfText) {
+    const lines = pdfText.split('\n');
+    const bullets = [];
+    
+    for (const line of lines) {
+      // Look for bullet points
+      if (line.match(/^\s*[•·\-\*]\s*[A-Z]/) && line.length > 20) {
+        bullets.push(line.trim().replace(/^[•·\-\*]\s*/, ''));
+        if (bullets.length >= 3) break; // Limit to first 3 bullets
+      }
+    }
+    
+    if (bullets.length > 0) {
+      return bullets.join('. ') + '.';
+    }
+    
+    return null;
   }
 }
 

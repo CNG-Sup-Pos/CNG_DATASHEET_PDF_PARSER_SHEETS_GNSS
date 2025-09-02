@@ -47,7 +47,7 @@ class SettingsManager {
         'dimensions', 'weight', 'operating_temperature', 'storage_temperature',
         'input_voltage', 'power_consumption', 'imu', 'accuracy', 'latency',
         'frequency', 'time_sync', 'measurement_types', 'ip_rating', 'channels',
-        'constellations', 'interfaces', 'formats', 'warranty'
+        'constellations', 'interfaces', 'formats', 'warranty', 'product_description'
       ]
     };
   }
@@ -337,6 +337,24 @@ class ParserConfig {
         ],
         unit: "option list",
         format: "{options}"
+      },
+
+      product_description: {
+        aliases: ["Description", "Overview", "Product overview", "Summary", "Features"],
+        labelPatterns: [
+          /\b(description|overview|product\s+overview|summary|features)\b/i,
+          /\b(introduction|about|highlights)\b/i
+        ],
+        valuePatterns: [
+          // Look for descriptive sentences (2+ sentences, marketing language)
+          /[A-Z][^.!?]*[.!?]\s+[A-Z][^.!?]*[.!?]/g,
+          // Feature bullet points
+          /[•·\-\*]\s*([^•·\-\*\n]{20,})/g,
+          // Overview paragraphs
+          /(?:overview|description|features?):\s*([^.]{50,}\.)/gi
+        ],
+        unit: "text",
+        format: "{description}"
       }
     };
   }
@@ -422,7 +440,8 @@ class ParserConfig {
           Q: 'formats',
           R: 'warranty',
           S: 'firmware_options',
-          T: 'confidence_score'
+          T: 'product_description',
+          U: 'confidence_score'
         },
         
         confidenceColors: {
@@ -436,7 +455,7 @@ class ParserConfig {
           'Dimensions', 'Weight', 'Operating Temp', 'Storage Temp', 'Input Voltage',
           'Power', 'IMU', 'Accuracy', 'Latency', 'Frequency', 'Time Sync',
           'Measurements', 'IP Rating', 'Channels', 'Constellations', 'Interfaces',
-          'Formats', 'Warranty', 'Firmware Options', 'Confidence'
+          'Formats', 'Warranty', 'Firmware Options', 'Product Description', 'Confidence'
         ]
       }
     };
@@ -450,7 +469,8 @@ class ParserConfig {
       'dimensions', 'weight', 'operating_temperature', 'storage_temperature',
       'input_voltage', 'power_consumption', 'imu', 'accuracy', 'latency',
       'frequency', 'time_sync', 'measurement_types', 'ip_rating', 'channels',
-      'constellations', 'interfaces', 'formats', 'warranty', 'firmware_options'
+      'constellations', 'interfaces', 'formats', 'warranty', 'firmware_options',
+      'product_description'
     ];
   }
 
