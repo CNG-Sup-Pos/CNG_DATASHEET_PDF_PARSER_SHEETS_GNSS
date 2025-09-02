@@ -41,7 +41,7 @@ class FieldExtractors {
   }
 
   /**
-   * Extract a specific field using its configuration
+   * Extract a specific field using its configuration with adaptive recovery
    */
   extractField(fieldName, pdfText) {
     const fieldConfig = this.getConfig().getFieldConfig(fieldName);
@@ -49,22 +49,276 @@ class FieldExtractors {
       throw new Error(`No configuration found for field: ${fieldName}`);
     }
 
-    // Find potential value matches
-    const candidates = this.findValueCandidates(pdfText, fieldConfig);
+    // Try multi-tier adaptive field recovery
+    return this.extractFieldWithRecovery(fieldName, pdfText, fieldConfig);
+  }
+
+  /**
+   * Multi-Tier Adaptive Field Recovery System
+   * Implements progressive fallback strategies for failed extractions
+   */
+  extractFieldWithRecovery(fieldName, pdfText, fieldConfig) {
+    // Tier 1: Standard extraction
+    let result = this.standardExtraction(fieldName, pdfText, fieldConfig);
+    if (result.confidence >= 70) {
+      result.recoveryTier = 1;
+      return result;
+    }
     
-    // Score and select best candidate
-    const bestCandidate = this.selectBestCandidate(candidates, fieldConfig);
+    // Tier 2: Relaxed pattern matching
+    result = this.relaxedPatternExtraction(fieldName, pdfText, fieldConfig);
+    if (result.confidence >= 50) {
+      result.recoveryTier = 2;
+      return result;
+    }
     
-    // Normalize the extracted value
-    const normalized = this.normalizeValue(bestCandidate, fieldConfig);
+    // Tier 3: Proximity-based recovery
+    result = this.proximityRecovery(fieldName, pdfText, fieldConfig);
+    if (result.confidence >= 30) {
+      result.recoveryTier = 3;
+      return result;
+    }
     
-    return {
-      value: normalized.value,
-      confidence: normalized.confidence,
-      context: bestCandidate ? bestCandidate.context : '',
-      method: normalized.method || 'regex_pattern',
-      rawValue: bestCandidate ? bestCandidate.raw : null
-    };
+    // Tier 4: Section-based extraction
+    result = this.sectionBasedExtraction(fieldName, pdfText, fieldConfig);
+    if (result.confidence >= 20) {
+      result.recoveryTier = 4;
+      return result;
+    }
+    
+    // Tier 5: Document-wide fuzzy search
+    result = this.documentWideSearch(fieldName, pdfText, fieldConfig);
+    result.recoveryTier = 5;
+    return result;
+  }
+
+  /**
+   * Tier 1: Standard extraction (original method)
+   */
+  standardExtraction(fieldName, pdfText, fieldConfig) {
+    try {
+      // Find potential value matches using standard patterns
+      const candidates = this.findValueCandidates(pdfText, fieldConfig);
+      
+      // Score and select best candidate
+      const bestCandidate = this.selectBestCandidate(candidates, fieldConfig);
+      
+      if (!bestCandidate) {
+        return { value: null, confidence: 0, context: '', method: 'standard_extraction', rawValue: null };
+      }
+      
+      // Normalize the extracted value
+      const normalized = this.normalizeValue(bestCandidate, fieldConfig);
+      
+      return {
+        value: normalized.value,
+        confidence: normalized.confidence,
+        context: bestCandidate.context,
+        method: normalized.method || 'standard_extraction',
+        rawValue: bestCandidate.raw
+      };
+    } catch (error) {
+      return { value: null, confidence: 0, context: '', method: 'standard_extraction', rawValue: null, error: error.message };
+    }
+  }
+
+  /**
+   * Tier 2: Relaxed pattern matching with more permissive regex
+   */
+  relaxedPatternExtraction(fieldName, pdfText, fieldConfig) {
+    try {
+      const relaxedCandidates = [];
+      
+      // Generate relaxed patterns based on field type
+      const relaxedPatterns = this.generateRelaxedPatterns(fieldName, fieldConfig);
+      
+      for (const pattern of relaxedPatterns) {
+        let match;
+        while ((match = pattern.exec(pdfText)) !== null) {
+          const confidence = this.calculateRelaxedConfidence(match, pdfText, fieldConfig);
+          
+          relaxedCandidates.push({
+            raw: match[0],
+            normalized: match[0],
+            confidence: confidence,
+            context: this.extractContext(pdfText, match.index, 50),
+            method: 'relaxed_pattern',
+            matchIndex: match.index
+          });
+          
+          if (!pattern.global) break;
+        }
+      }
+      
+      const bestCandidate = this.selectBestCandidate(relaxedCandidates, fieldConfig);
+      if (!bestCandidate) {
+        return { value: null, confidence: 0, context: '', method: 'relaxed_pattern', rawValue: null };
+      }
+      
+      const normalized = this.normalizeValue(bestCandidate, fieldConfig);
+      return {
+        value: normalized.value,
+        confidence: Math.max(20, normalized.confidence - 10), // Penalty for relaxed extraction
+        context: bestCandidate.context,
+        method: 'relaxed_pattern',
+        rawValue: bestCandidate.raw
+      };
+    } catch (error) {
+      return { value: null, confidence: 0, context: '', method: 'relaxed_pattern', rawValue: null, error: error.message };
+    }
+  }
+
+  /**
+   * Tier 3: Proximity-based recovery - look for values near field aliases
+   */
+  proximityRecovery(fieldName, pdfText, fieldConfig) {
+    try {
+      const lines = pdfText.split('\n');
+      const candidates = [];
+      const proximitySettings = this.getConfig().getProximitySettings();
+      
+      // Search for field aliases in text
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
+        // Check if line contains field aliases
+        for (const alias of fieldConfig.aliases) {
+          if (line.toLowerCase().includes(alias.toLowerCase())) {
+            // Look for values in current line and nearby lines
+            const searchLines = [];
+            const lineGap = proximitySettings.lineGap || 1;
+            
+            // Add current line and nearby lines
+            for (let j = Math.max(0, i - lineGap); j <= Math.min(lines.length - 1, i + lineGap); j++) {
+              searchLines.push(lines[j]);
+            }
+            
+            const searchText = searchLines.join(' ');
+            const proximityValues = this.extractProximityValues(searchText, fieldConfig);
+            
+            for (const value of proximityValues) {
+              candidates.push({
+                raw: value,
+                normalized: value,
+                confidence: 40, // Base confidence for proximity extraction
+                context: searchText.substring(0, 100),
+                method: 'proximity_recovery',
+                matchIndex: i
+              });
+            }
+          }
+        }
+      }
+      
+      const bestCandidate = this.selectBestCandidate(candidates, fieldConfig);
+      if (!bestCandidate) {
+        return { value: null, confidence: 0, context: '', method: 'proximity_recovery', rawValue: null };
+      }
+      
+      const normalized = this.normalizeValue(bestCandidate, fieldConfig);
+      return {
+        value: normalized.value,
+        confidence: Math.max(15, normalized.confidence - 20), // Penalty for proximity extraction
+        context: bestCandidate.context,
+        method: 'proximity_recovery',
+        rawValue: bestCandidate.raw
+      };
+    } catch (error) {
+      return { value: null, confidence: 0, context: '', method: 'proximity_recovery', rawValue: null, error: error.message };
+    }
+  }
+
+  /**
+   * Tier 4: Section-based extraction - look in prioritized document sections
+   */
+  sectionBasedExtraction(fieldName, pdfText, fieldConfig) {
+    try {
+      const sections = this.identifyDocumentSections(pdfText);
+      const sectionWeights = this.getConfig().getSectionWeights();
+      const candidates = [];
+      
+      // Search sections in priority order
+      const prioritizedSections = Object.keys(sectionWeights).sort((a, b) => sectionWeights[b] - sectionWeights[a]);
+      
+      for (const sectionType of prioritizedSections) {
+        if (sections[sectionType]) {
+          const sectionText = sections[sectionType];
+          const sectionValues = this.extractSectionValues(sectionText, fieldConfig, sectionType);
+          
+          for (const value of sectionValues) {
+            const weight = sectionWeights[sectionType] || 10;
+            candidates.push({
+              raw: value,
+              normalized: value,
+              confidence: Math.min(35, weight), // Base confidence from section weight
+              context: sectionText.substring(0, 100),
+              method: 'section_based',
+              section: sectionType
+            });
+          }
+        }
+      }
+      
+      const bestCandidate = this.selectBestCandidate(candidates, fieldConfig);
+      if (!bestCandidate) {
+        return { value: null, confidence: 0, context: '', method: 'section_based', rawValue: null };
+      }
+      
+      const normalized = this.normalizeValue(bestCandidate, fieldConfig);
+      return {
+        value: normalized.value,
+        confidence: Math.max(10, normalized.confidence - 25), // Penalty for section extraction
+        context: bestCandidate.context,
+        method: 'section_based',
+        rawValue: bestCandidate.raw
+      };
+    } catch (error) {
+      return { value: null, confidence: 0, context: '', method: 'section_based', rawValue: null, error: error.message };
+    }
+  }
+
+  /**
+   * Tier 5: Document-wide fuzzy search - last resort broad pattern search
+   */
+  documentWideSearch(fieldName, pdfText, fieldConfig) {
+    try {
+      const candidates = [];
+      
+      // Generate very broad patterns for field type
+      const broadPatterns = this.generateBroadPatterns(fieldName, fieldConfig);
+      
+      for (const pattern of broadPatterns) {
+        let match;
+        while ((match = pattern.exec(pdfText)) !== null) {
+          candidates.push({
+            raw: match[0],
+            normalized: match[0],
+            confidence: 15, // Low confidence for broad search
+            context: this.extractContext(pdfText, match.index, 30),
+            method: 'document_wide',
+            matchIndex: match.index
+          });
+          
+          if (!pattern.global) break;
+        }
+      }
+      
+      const bestCandidate = this.selectBestCandidate(candidates, fieldConfig);
+      if (!bestCandidate) {
+        return { value: null, confidence: 0, context: '', method: 'document_wide', rawValue: null };
+      }
+      
+      const normalized = this.normalizeValue(bestCandidate, fieldConfig);
+      return {
+        value: normalized.value,
+        confidence: Math.max(5, normalized.confidence - 30), // Heavy penalty for document-wide search
+        context: bestCandidate.context,
+        method: 'document_wide',
+        rawValue: bestCandidate.raw
+      };
+    } catch (error) {
+      return { value: null, confidence: 0, context: '', method: 'document_wide', rawValue: null, error: error.message };
+    }
   }
 
   /**
@@ -585,6 +839,209 @@ class FieldExtractors {
    */
   normalizeText(raw) {
     return raw.trim().replace(/\s+/g, ' ');
+  }
+
+  // === ADAPTIVE RECOVERY HELPER METHODS ===
+
+  /**
+   * Generate relaxed patterns for Tier 2 recovery
+   */
+  generateRelaxedPatterns(fieldName, fieldConfig) {
+    const relaxedPatterns = [];
+    
+    switch (fieldName) {
+      case 'dimensions':
+        // More permissive dimension patterns
+        relaxedPatterns.push(/(\d+)\s*\w*\s*[x×*·\s]+\s*(\d+)\s*\w*\s*[x×*·\s]+\s*(\d+)/gi);
+        relaxedPatterns.push(/(\d+)\s+(\d+)\s+(\d+)/gi); // Just three numbers
+        break;
+        
+      case 'weight':
+        // Look for any number followed by weight units
+        relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*(?:g|kg|grams?|kilograms?|lb|pound|oz)/gi);
+        relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*g/gi);
+        break;
+        
+      case 'operating_temperature':
+        // Temperature ranges or single values
+        relaxedPatterns.push(/([-+]?\d+)\s*(?:°C|C|degrees?)/gi);
+        relaxedPatterns.push(/([-+]?\d+)\s*(?:to|[-–~])\s*([-+]?\d+)/gi);
+        break;
+        
+      case 'input_voltage':
+        // Voltage patterns
+        relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*(?:VDC|VAC|V|volts?)/gi);
+        relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*[-–~]\s*(\d+(?:[.,]\d+)?)/gi);
+        break;
+        
+      case 'power_consumption':
+        // Power patterns
+        relaxedPatterns.push(/(\d+(?:[.,]\d+)?)\s*(?:W|watts?|mA|mW)/gi);
+        break;
+        
+      default:
+        // Generic numeric patterns for other fields
+        relaxedPatterns.push(/(\d+(?:[.,]\d+)?)/gi);
+    }
+    
+    return relaxedPatterns;
+  }
+
+  /**
+   * Calculate confidence for relaxed pattern matches
+   */
+  calculateRelaxedConfidence(match, text, fieldConfig) {
+    let confidence = 30; // Base confidence for relaxed patterns
+    
+    // Bonus if found near field aliases
+    const context = this.extractContext(text, match.index, 80);
+    for (const alias of fieldConfig.aliases) {
+      if (context.toLowerCase().includes(alias.toLowerCase())) {
+        confidence += 15;
+        break;
+      }
+    }
+    
+    // Bonus for reasonable match length
+    if (match[0].length >= 3) confidence += 5;
+    
+    return Math.min(60, confidence); // Cap at 60 for relaxed patterns
+  }
+
+  /**
+   * Extract values based on proximity to field aliases
+   */
+  extractProximityValues(searchText, fieldConfig) {
+    const values = [];
+    
+    // Use relaxed patterns in the proximity text
+    const relaxedPatterns = this.generateRelaxedPatterns(fieldConfig.unit, fieldConfig);
+    
+    for (const pattern of relaxedPatterns) {
+      let match;
+      while ((match = pattern.exec(searchText)) !== null) {
+        values.push(match[0]);
+        if (!pattern.global) break;
+      }
+    }
+    
+    return values;
+  }
+
+  /**
+   * Identify document sections for section-based extraction
+   */
+  identifyDocumentSections(pdfText) {
+    const sections = {};
+    const lines = pdfText.split('\n');
+    
+    let currentSection = 'general';
+    let sectionContent = [];
+    
+    for (const line of lines) {
+      const lowerLine = line.toLowerCase();
+      
+      // Identify section headers
+      if (lowerLine.includes('performance') || lowerLine.includes('specification')) {
+        if (sectionContent.length > 0) {
+          sections[currentSection] = sectionContent.join('\n');
+        }
+        currentSection = 'performance';
+        sectionContent = [];
+      } else if (lowerLine.includes('technical') || lowerLine.includes('hardware')) {
+        if (sectionContent.length > 0) {
+          sections[currentSection] = sectionContent.join('\n');
+        }
+        currentSection = 'technical';
+        sectionContent = [];
+      } else if (lowerLine.includes('feature') || lowerLine.includes('capability')) {
+        if (sectionContent.length > 0) {
+          sections[currentSection] = sectionContent.join('\n');
+        }
+        currentSection = 'features';
+        sectionContent = [];
+      } else if (lowerLine.includes('overview') || lowerLine.includes('description')) {
+        if (sectionContent.length > 0) {
+          sections[currentSection] = sectionContent.join('\n');
+        }
+        currentSection = 'marketing';
+        sectionContent = [];
+      }
+      
+      sectionContent.push(line);
+    }
+    
+    // Add final section
+    if (sectionContent.length > 0) {
+      sections[currentSection] = sectionContent.join('\n');
+    }
+    
+    return sections;
+  }
+
+  /**
+   * Extract values from a specific document section
+   */
+  extractSectionValues(sectionText, fieldConfig, sectionType) {
+    const values = [];
+    
+    // Use appropriate patterns based on section type
+    let patterns = fieldConfig.valuePatterns;
+    
+    if (sectionType === 'marketing') {
+      // Use broader patterns for marketing sections
+      patterns = this.generateBroadPatterns(fieldConfig.unit, fieldConfig);
+    }
+    
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(sectionText)) !== null) {
+        values.push(match[0]);
+        if (!pattern.global) break;
+      }
+    }
+    
+    return values;
+  }
+
+  /**
+   * Generate broad patterns for document-wide search
+   */
+  generateBroadPatterns(fieldName, fieldConfig) {
+    const broadPatterns = [];
+    
+    switch (fieldName) {
+      case 'dimensions':
+        // Very broad dimension patterns
+        broadPatterns.push(/(\d+)\s*[x×*·\s]\s*(\d+)\s*[x×*·\s]\s*(\d+)/gi);
+        break;
+        
+      case 'weight':
+        // Any number with possible weight context
+        broadPatterns.push(/(\d+(?:[.,]\d+)?)\s*[gk]/gi);
+        break;
+        
+      case 'operating_temperature':
+        // Any temperature-like pattern
+        broadPatterns.push(/([-+]?\d+)[\s°]*C/gi);
+        break;
+        
+      case 'input_voltage':
+        // Any voltage-like pattern
+        broadPatterns.push(/(\d+(?:[.,]\d+)?)\s*V/gi);
+        break;
+        
+      case 'power_consumption':
+        // Any power-like pattern
+        broadPatterns.push(/(\d+(?:[.,]\d+)?)\s*[WmA]/gi);
+        break;
+        
+      default:
+        // Very generic numeric patterns
+        broadPatterns.push(/\b(\d+(?:[.,]\d+)?)\b/gi);
+    }
+    
+    return broadPatterns;
   }
 }
 
