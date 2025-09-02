@@ -3,8 +3,31 @@
  * Loads field patterns, validation rules, and formatting from framework files
  */
 
+/**
+ * Settings Manager for user-configurable parser options
+ */
+class SettingsManager {
+  constructor() {
+    this.properties = PropertiesService.getScriptProperties();
+  }
+  
+  getSettings() {
+    const stored = this.properties.getProperty('GNSS_SETTINGS');
+    return stored ? JSON.parse(stored) : {
+      confidence: { high: 85, medium: 70, low: 50, autoReject: 30 },
+      fields: { enableAll: true }
+    };
+  }
+  
+  saveSettings(settings) {
+    this.properties.setProperty('GNSS_SETTINGS', JSON.stringify(settings));
+  }
+}
+
 class ParserConfig {
   constructor() {
+    this.settingsManager = new SettingsManager();
+    this.userSettings = this.settingsManager.getSettings();
     this.fieldPatterns = this.loadFieldPatterns();
     this.validationRules = this.loadValidationRules();
     this.outputFormatting = this.loadOutputFormatting();
@@ -275,12 +298,14 @@ class ParserConfig {
    * Load validation rules and confidence thresholds
    */
   loadValidationRules() {
+    const settings = this.userSettings;
+    
     return {
       global: {
-        requiredConfidenceMinimum: 50,
-        autoRejectBelow: 30,
-        manualReviewThreshold: 70,
-        highConfidenceThreshold: 85,
+        requiredConfidenceMinimum: settings.confidence.low,
+        autoRejectBelow: settings.confidence.autoReject,
+        manualReviewThreshold: settings.confidence.medium,
+        highConfidenceThreshold: settings.confidence.high,
         maximumFieldLength: 500
       },
       

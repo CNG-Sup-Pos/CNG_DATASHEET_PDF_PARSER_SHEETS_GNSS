@@ -25,6 +25,7 @@ function onOpen() {
     .addItem('Validate Data', 'validateExistingData')
     .addItem('Show Processing Log', 'showProcessingLog')
     .addSeparator()
+    .addItem('Configure Settings', 'showConfigDialog')
     .addItem('Setup Instructions', 'showSetupInstructions')
     .addToUi();
 }
@@ -868,4 +869,117 @@ function testPDFExtraction() {
       stack: error.stack
     };
   }
+}
+
+/**
+ * Configuration dialog functions
+ */
+function showConfigDialog() {
+  const html = HtmlService.createHtmlOutput(configDialogHTML())
+    .setWidth(400).setHeight(300);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Parser Settings');
+}
+
+function getSettings() { 
+  return CONFIG.settingsManager.getSettings(); 
+}
+
+function saveSettings(s) { 
+  CONFIG.settingsManager.saveSettings(s);
+  // Reload config to pick up new settings
+  CONFIG = new ParserConfig();
+}
+
+function configDialogHTML() {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .setting { margin: 15px 0; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input[type="range"] { width: 250px; }
+    .value { color: #4285f4; font-weight: bold; }
+    .buttons { text-align: center; margin-top: 20px; }
+    button { padding: 8px 16px; margin: 0 5px; }
+    .primary { background: #4285f4; color: white; border: none; }
+  </style>
+</head>
+<body>
+  <h3>Confidence Thresholds</h3>
+  
+  <div class="setting">
+    <label>High Confidence: <span id="highValue" class="value">85%</span></label>
+    <input type="range" id="high" min="60" max="100" value="85" 
+           oninput="updateValue('high', this.value + '%')">
+  </div>
+  
+  <div class="setting">
+    <label>Medium Confidence: <span id="mediumValue" class="value">70%</span></label>
+    <input type="range" id="medium" min="40" max="90" value="70" 
+           oninput="updateValue('medium', this.value + '%')">
+  </div>
+  
+  <div class="setting">
+    <label>Low Confidence: <span id="lowValue" class="value">50%</span></label>
+    <input type="range" id="low" min="20" max="80" value="50" 
+           oninput="updateValue('low', this.value + '%')">
+  </div>
+  
+  <div class="setting">
+    <label>Auto Reject: <span id="autoRejectValue" class="value">30%</span></label>
+    <input type="range" id="autoReject" min="0" max="60" value="30" 
+           oninput="updateValue('autoReject', this.value + '%')">
+  </div>
+  
+  <div class="buttons">
+    <button class="primary" onclick="save()">Save Settings</button>
+    <button onclick="google.script.host.close()">Cancel</button>
+  </div>
+  
+  <script>
+    // Load current settings
+    google.script.run
+      .withSuccessHandler(loadSettings)
+      .getSettings();
+    
+    function loadSettings(settings) {
+      document.getElementById('high').value = settings.confidence.high;
+      document.getElementById('medium').value = settings.confidence.medium;
+      document.getElementById('low').value = settings.confidence.low;
+      document.getElementById('autoReject').value = settings.confidence.autoReject;
+      
+      updateValue('high', settings.confidence.high + '%');
+      updateValue('medium', settings.confidence.medium + '%');
+      updateValue('low', settings.confidence.low + '%');
+      updateValue('autoReject', settings.confidence.autoReject + '%');
+    }
+    
+    function updateValue(id, value) {
+      document.getElementById(id + 'Value').textContent = value;
+    }
+    
+    function save() {
+      const settings = {
+        confidence: {
+          high: parseInt(document.getElementById('high').value),
+          medium: parseInt(document.getElementById('medium').value),
+          low: parseInt(document.getElementById('low').value),
+          autoReject: parseInt(document.getElementById('autoReject').value)
+        },
+        fields: { enableAll: true }
+      };
+      
+      google.script.run
+        .withSuccessHandler(() => {
+          alert('Settings saved successfully!');
+          google.script.host.close();
+        })
+        .saveSettings(settings);
+    }
+  </script>
+</body>
+</html>
+  `;
 }
