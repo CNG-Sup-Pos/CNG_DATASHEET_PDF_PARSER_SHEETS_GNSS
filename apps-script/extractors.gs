@@ -309,9 +309,20 @@ class FieldExtractors {
 
   /**
    * Normalize dimensions to standard format
+   * Enhanced for multiple separators and space-separated formats
    */
   normalizeDimensions(raw) {
-    const match = raw.match(/(\d+(?:[.,]\d+)?)\s*[×x*]\s*(\d+(?:[.,]\d+)?)\s*[×x*]\s*(\d+(?:[.,]\d+)?)/);
+    // Support multiple separators: x, ×, *, ·, space
+    // Standard pattern with explicit separators
+    const separatorPattern = /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[x×\*·]+\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[x×\*·]+\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?/i;
+    let match = raw.match(separatorPattern);
+    
+    if (!match) {
+      // Enhanced patterns for space-separated: "135mm 102mm 47mm" or "135 102 47"
+      const spacePattern = /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s+(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s+(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?/i;
+      match = raw.match(spacePattern);
+    }
+    
     if (!match) return raw;
     
     const [, l, w, h] = match;
@@ -319,73 +330,163 @@ class FieldExtractors {
     const width = parseFloat(w.replace(',', '.'));
     const height = parseFloat(h.replace(',', '.'));
     
-    return `${length} × ${width} × ${height} mm`;
+    return length + ' × ' + width + ' × ' + height + ' mm';
   }
 
   /**
    * Normalize weight to grams
+   * Enhanced for dual units and varying spacing
    */
   normalizeWeight(raw) {
-    const match = raw.match(/(\d+(?:[.,]\d+)?)\s*(g|kg|grams?|kilograms?)/i);
+    // Support dual units: "500 g / 1.1 lb" - extract primary (g)
+    const dualUnitPattern = /(\d+(?:[.,]\d+)?)\s*(g|grams?)\s*\/\s*\d+(?:[.,]\d+)?\s*(?:lb|pound|oz|ounce)/i;
+    let match = raw.match(dualUnitPattern);
+    
+    if (!match) {
+      // Standard weight pattern with flexible spacing
+      const standardPattern = /(\d+(?:[.,]\d+)?)\s*(g|kg|grams?|kilograms?|pound|lb|oz|ounce)/i;
+      match = raw.match(standardPattern);
+    }
+    
     if (!match) return raw;
     
     const [, value, unit] = match;
     let weight = parseFloat(value.replace(',', '.'));
     
+    // Convert to grams
     if (unit.toLowerCase().startsWith('kg')) {
-      weight *= 1000; // Convert kg to g
+      weight *= 1000;
+    } else if (unit.toLowerCase().startsWith('lb') || unit.toLowerCase().startsWith('pound')) {
+      weight *= 453.592; // Convert pounds to grams
+    } else if (unit.toLowerCase().startsWith('oz') || unit.toLowerCase().startsWith('ounce')) {
+      weight *= 28.3495; // Convert ounces to grams
     }
     
-    return `${weight} g`;
+    return weight + ' g';
   }
 
   /**
    * Normalize temperature range
+   * Enhanced for multiple separators and approximation symbols
    */
   normalizeTemperature(raw) {
-    const match = raw.match(/([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C)?\s*(?:to|–|-|~)\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C)?/);
-    if (!match) return raw;
+    // Support multiple range separators: -, –, ~, to, /
+    // Handle approximation symbols: ≈, ~, (typ), typical
+    const cleanedRaw = raw.replace(/[≈~]/g, '').replace(/\(typ\)|typical/gi, '');
+    
+    // Range pattern with flexible separators
+    const rangePattern = /([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|°\s*C|C)?\s*(?:to|–|-|~|\/)\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|°\s*C|C)?/i;
+    let match = cleanedRaw.match(rangePattern);
+    
+    if (!match) {
+      // Single temperature value
+      const singlePattern = /([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|°\s*C|C)/i;
+      match = cleanedRaw.match(singlePattern);
+      if (match) {
+        const temp = parseFloat(match[1].replace(',', '.'));
+        return temp + '°C';
+      }
+      return raw;
+    }
     
     const [, min, max] = match;
     const minTemp = parseFloat(min.replace(',', '.'));
     const maxTemp = parseFloat(max.replace(',', '.'));
     
-    return `${minTemp}°C to ${maxTemp}°C`;
+    return minTemp + '°C to ' + maxTemp + '°C';
   }
 
   /**
    * Normalize voltage range
+   * Enhanced for positive prefixes and flexible separators
    */
   normalizeVoltage(raw) {
-    const match = raw.match(/(\d+(?:[.,]\d+)?)\s*[–-]\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V)/i);
-    if (!match) return raw;
+    // Clean positive prefixes: "+3 to 15" -> "3 to 15"
+    const cleanedRaw = raw.replace(/\+(\d)/g, '$1');
+    
+    // Support multiple range separators and unit spacing
+    const rangePattern = /(\d+(?:[.,]\d+)?)\s*[–-~to\/]\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)/i;
+    let match = cleanedRaw.match(rangePattern);
+    
+    if (!match) {
+      // Single voltage value
+      const singlePattern = /(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)/i;
+      match = cleanedRaw.match(singlePattern);
+      if (match) {
+        const [, value, unit] = match;
+        const voltage = parseFloat(value.replace(',', '.'));
+        return voltage + ' ' + unit.toUpperCase();
+      }
+      return raw;
+    }
     
     const [, min, max, unit] = match;
     const minVolt = parseFloat(min.replace(',', '.'));
     const maxVolt = parseFloat(max.replace(',', '.'));
     
-    return `${minVolt}–${maxVolt} ${unit.toUpperCase()}`;
+    return minVolt + '–' + maxVolt + ' ' + unit.toUpperCase();
   }
 
   /**
    * Normalize power consumption
+   * Enhanced for approximation symbols and unit spacing
    */
   normalizePower(raw) {
-    const match = raw.match(/(\d+(?:[.,]\d+)?)\s*(W|watts?)/i);
+    // Handle approximation symbols and typography variations
+    const cleanedRaw = raw.replace(/[≈~]/g, '').replace(/\(typ\)|typical/gi, '');
+    
+    // Support unit spacing variations: "2W(typ)", "65 m A", "2.5 W"
+    const powerPattern = /(\d+(?:[.,]\d+)?)\s*(?:mA|mW|W|watts?|milliwatts?|milliamps?)/i;
+    const match = cleanedRaw.match(powerPattern);
+    
     if (!match) return raw;
     
     const [, value] = match;
     const power = parseFloat(value.replace(',', '.'));
     
-    return `${power} W`;
+    // Extract unit from original match
+    const unitMatch = cleanedRaw.match(/\d+(?:[.,]\d+)?\s*(mA|mW|W|watts?|milliwatts?|milliamps?)/i);
+    let unit = 'W';
+    
+    if (unitMatch) {
+      const rawUnit = unitMatch[1].toLowerCase();
+      if (rawUnit.startsWith('ma')) {
+        unit = 'mA';
+      } else if (rawUnit.startsWith('mw')) {
+        unit = 'mW';
+      } else {
+        unit = 'W';
+      }
+    }
+    
+    return power + ' ' + unit;
   }
 
   /**
    * Normalize accuracy specification
+   * Enhanced for spacing variations and range formats
    */
   normalizeAccuracy(raw) {
-    const match = raw.match(/(\d+(?:[.,]\d+)?)\s*(cm|mm|m)\s*(?:\+\s*(\d+(?:[.,]\d+)?)\s*ppm)?/i);
-    if (!match) return raw;
+    // Support spacing variations and multiple formats
+    const accuracyPattern = /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)\s*(?:\+\s*(\d+(?:[.,]\d+)?)\s*ppm)?/i;
+    let match = raw.match(accuracyPattern);
+    
+    if (!match) {
+      // Alternative format: "± 2.5 m"
+      const altPattern = /[±]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)/i;
+      match = raw.match(altPattern);
+      if (match) {
+        const [, value, unit] = match;
+        let accuracy = parseFloat(value.replace(',', '.'));
+        
+        // Convert to cm
+        if (unit.toLowerCase() === 'mm') accuracy /= 10;
+        if (unit.toLowerCase() === 'm') accuracy *= 100;
+        
+        return '± ' + accuracy + ' cm';
+      }
+      return raw;
+    }
     
     const [, value, unit, ppm] = match;
     let accuracy = parseFloat(value.replace(',', '.'));
@@ -394,9 +495,9 @@ class FieldExtractors {
     if (unit.toLowerCase() === 'mm') accuracy /= 10;
     if (unit.toLowerCase() === 'm') accuracy *= 100;
     
-    let result = `${accuracy} cm`;
+    let result = accuracy + ' cm';
     if (ppm) {
-      result += ` + ${parseFloat(ppm.replace(',', '.'))} ppm`;
+      result += ' + ' + parseFloat(ppm.replace(',', '.')) + ' ppm';
     }
     
     return result;
@@ -435,9 +536,16 @@ class FieldExtractors {
 
   /**
    * Normalize time synchronization accuracy
+   * Enhanced for approximation symbols and unit variations
    */
   normalizeTimeSync(raw) {
-    const match = raw.match(/(?:±\s*)?(\d+(?:[.,]\d+)?)\s*(ns|μs|nanoseconds?|microseconds?)/i);
+    // Clean approximation symbols
+    const cleanedRaw = raw.replace(/[≈~]/g, '').replace(/\(typ\)|typical/gi, '');
+    
+    // Support ± prefix and unit spacing variations
+    const timeSyncPattern = /(?:[±]\s*)?(\d+(?:[.,]\d+)?)\s*(ns|μs|nanoseconds?|microseconds?)/i;
+    const match = cleanedRaw.match(timeSyncPattern);
+    
     if (!match) return raw;
     
     const [, value, unit] = match;
@@ -448,7 +556,7 @@ class FieldExtractors {
       accuracy *= 1000;
     }
     
-    return `${accuracy} ns RMS`;
+    return accuracy + ' ns RMS';
   }
 
   /**

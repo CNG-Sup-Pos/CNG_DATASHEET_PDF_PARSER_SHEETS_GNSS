@@ -80,7 +80,10 @@ class ParserConfig {
           /\b(l\s*[×x]\s*w\s*[×x]\s*h|length\s*[×x]\s*width\s*[×x]\s*height)\b/i
         ],
         valuePatterns: [
-          /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[×x*]\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[×x*]\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?/gi,
+          // Enhanced: support multiple separators (×, x, *, ·, space) and varying unit spacing
+          /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[×x*·]+\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[×x*·]+\s*(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?/gi,
+          // Space-separated format: "135mm 102mm 47mm" or "135 102 47"
+          /(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s+(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s+(\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?/gi,
           /(\d+(?:[.,]\d+)?)\s*[×x]\s*(\d+(?:[.,]\d+)?)\s*[×x]\s*(\d+(?:[.,]\d+)?)\s*mm/gi
         ],
         unit: "mm",
@@ -93,7 +96,9 @@ class ParserConfig {
           /\b(weight|mass)\b/i
         ],
         valuePatterns: [
-          /(\d+(?:[.,]\d+)?)\s*(g|kg|grams?|kilograms?)\b/gi,
+          // Enhanced: support dual units "500 g / 1.1 lb" and varying spacing
+          /(\d+(?:[.,]\d+)?)\s*(g|grams?)\s*\/\s*\d+(?:[.,]\d+)?\s*(?:lb|pound|oz|ounce)/gi,
+          /(\d+(?:[.,]\d+)?)\s*(g|kg|grams?|kilograms?|pound|lb|oz|ounce)\b/gi,
           /(\d+(?:[.,]\d+)?)\s*g\b/gi
         ],
         unit: "g",
@@ -107,8 +112,11 @@ class ParserConfig {
           /\b(environmental|temp\.?\s*range)\b/i
         ],
         valuePatterns: [
-          /([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C|deg\s*C)?\s*to\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C|deg\s*C)/gi,
-          /([-+]?\d+(?:[.,]\d+)?)\s*[~–-]\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C)/gi
+          // Enhanced: support multiple separators (-, –, ~, to, /) and approximation symbols
+          /([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|°\s*C|C|deg\s*C)?\s*(?:to|–|-|~|\/)\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|°\s*C|C|deg\s*C)/gi,
+          /([-+]?\d+(?:[.,]\d+)?)\s*[~–-]\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|C)/gi,
+          // Single temperature with approximation: "~25°C", "≈ 85°C"
+          /[≈~]?\s*([-+]?\d+(?:[.,]\d+)?)\s*(?:°C|°\s*C|C)/gi
         ],
         unit: "°C",
         format: "{min}°C to {max}°C"
@@ -133,8 +141,11 @@ class ParserConfig {
           /\b(vdc|vac|voltage)\b/i
         ],
         valuePatterns: [
-          /(\d+(?:[.,]\d+)?)\s*[–-]\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V)/gi,
-          /(\d+(?:[.,]\d+)?)\s*(?:to|~)\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V)/gi
+          // Enhanced: support positive prefix cleaning and multiple separators
+          /(\d+(?:[.,]\d+)?)\s*[–-~to\/]\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)/gi,
+          /(\d+(?:[.,]\d+)?)\s*(?:to|~)\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V)/gi,
+          // Single voltage with unit spacing: "12 V", "3.3VDC"
+          /(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)\b/gi
         ],
         unit: "VDC",
         format: "{min}–{max} {unit}"
@@ -147,8 +158,10 @@ class ParserConfig {
           /\b(power|watts?|w)\b/i
         ],
         valuePatterns: [
+          // Enhanced: support approximation symbols and unit spacing variations
+          /[≈~]?\s*(\d+(?:[.,]\d+)?)\s*(?:mA|mW|W|watts?|milliwatts?|milliamps?)\b/gi,
           /(\d+(?:[.,]\d+)?)\s*(W|watts?)\b/gi,
-          /(\d+(?:[.,]\d+)?)\s*W\s*(?:typical|max|maximum)?/gi
+          /(\d+(?:[.,]\d+)?)\s*W\s*(?:typical|max|maximum|\(typ\))?/gi
         ],
         unit: "W",
         format: "{value} W"
