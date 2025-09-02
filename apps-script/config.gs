@@ -142,7 +142,7 @@ class ParserConfig {
         ],
         valuePatterns: [
           // Enhanced: support positive prefix cleaning and multiple separators
-          /(\d+(?:[.,]\d+)?)\s*[–-~to\/]\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)/gi,
+          /(\d+(?:[.,]\d+)?)\s*(?:[–\-~]|to|\/)\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)/gi,
           /(\d+(?:[.,]\d+)?)\s*(?:to|~)\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V)/gi,
           // Single voltage with unit spacing: "12 V", "3.3VDC"
           /(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)\b/gi

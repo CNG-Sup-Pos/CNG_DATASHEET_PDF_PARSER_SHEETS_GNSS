@@ -405,7 +405,7 @@ class FieldExtractors {
     const cleanedRaw = raw.replace(/\+(\d)/g, '$1');
     
     // Support multiple range separators and unit spacing
-    const rangePattern = /(\d+(?:[.,]\d+)?)\s*[–-~to\/]\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)/i;
+    const rangePattern = /(\d+(?:[.,]\d+)?)\s*(?:[–\-~]|to|\/)\s*(\d+(?:[.,]\d+)?)\s*(VDC|VAC|V|VCC|volts?)/i;
     let match = cleanedRaw.match(rangePattern);
     
     if (!match) {
