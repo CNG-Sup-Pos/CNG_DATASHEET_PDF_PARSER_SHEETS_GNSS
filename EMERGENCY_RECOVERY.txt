@@ -1,0 +1,27 @@
+
+GNSS Parser Modularization - Emergency Recovery Instructions
+============================================================
+Created: 2025-09-03T06:19:54.335Z
+Backup Branch: backup/pre-modularization-2025-09-03-0819
+
+LEVEL 1 RECOVERY - File Restoration (Quick Fix):
+git checkout backup/pre-modularization-2025-09-03-0819 -- apps-script/
+
+LEVEL 2 RECOVERY - Branch Rollback (Complete Rollback):
+git reset --hard backup/pre-modularization-2025-09-03-0819
+
+LEVEL 3 RECOVERY - Manual Branch Switch:
+git checkout backup/pre-modularization-2025-09-03-0819
+git checkout -b rescue/restore-from-backup
+# Copy working files back to implement branch manually
+
+LEVEL 4 RECOVERY - Nuclear Option (Last Resort):
+git log --oneline
+# Find the last known good commit
+git reset --hard [commit-hash]
+
+Additional Notes:
+- All backups created with timestamp: 2025-09-03-0819
+- Working branch: refactor/modularize-codebase  
+- Original files preserved in backup branch
+- Contact support if all recovery methods fail
